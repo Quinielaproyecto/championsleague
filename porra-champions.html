@@ -426,7 +426,7 @@ let TEAMS = [
 ];
 const abbr = n => n.replace(/[^A-Za-zÀ-ÿ0-9 ]/g,"").split(" ").map(w=>w[0]).join("").slice(0,3).toUpperCase();
 const slugify = s => s.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'');
-const state = { order:[], color:{}, logo:{}, id:{}, nameBySlug:{}, advance:[], bracket:null, bracketReal:null, uid:null, ventanaGP:'abierta', ventanaElim:'pendiente', dirty:false };
+const state = { order:[], color:{}, logo:{}, id:{}, nameBySlug:{}, advance:[], bracket:null, bracketReal:null, uid:null, ventanaGP:'abierta', ventanaElim:'pendiente', dirtyA:false, dirtyB:false };
 function loadTeams(teams){
   TEAMS = teams;
   state.order = TEAMS.map(t=>t[0]);
@@ -517,7 +517,7 @@ function buildGroup(){
   relayout();
   Sortable.create(groupList,{animation:160,handle:'.grip',filter:'.divider',ghostClass:'sortable-ghost',
     forceFallback:true,fallbackTolerance:4,delayOnTouchOnly:true,delay:60,disabled:!editableA(),
-    onEnd:()=>{relayout();markDirty();}});
+    onEnd:()=>{relayout();markDirtyA();}});
 }
 
 /* ---------- PLAYOFF ---------- */
@@ -539,7 +539,7 @@ function renderPlayoff(){
       const t=row.dataset.team;
       if(state.advance.includes(t))state.advance=state.advance.filter(x=>x!==t);
       else{if(state.advance.length>=8)return;state.advance.push(t);}
-      markDirty(); renderPlayoff();
+      markDirtyA(); renderPlayoff();
     });
   });
   document.getElementById('selPill').textContent=`${state.advance.length} / 8`;
@@ -565,8 +565,16 @@ function ensureBracket(){
       const r16=[];for(let i=0;i<8;i++){const m=blank();m.a=qual[i]||null;m.b=adv[i]||null;r16.push(m);}
       state.bracket={r16,qf:[blank(),blank(),blank(),blank()],sf:[blank(),blank()],fn:[blank()]};
     }
+    applyElimSaved();
   }
   renderBracket();
+}
+function applyElimSaved(){
+  if(!state.elimSaved) return;
+  ['r16','qf','sf','fn'].forEach(k=>state.bracket[k].forEach(m=>{
+    const s = m.id && state.elimSaved[m.id];
+    if(s){ m.ga=s.ga; m.gb=s.gb; m.pen=s.pen; }
+  }));
 }
 function winner(m){if(!m||m.a==null||m.b==null||m.ga===''||m.gb==='')return null;
   const a=+m.ga,b=+m.gb;return a>b?m.a:b>a?m.b:m.pen;}
@@ -582,7 +590,7 @@ function matchCard(m,key,i){
   const w=winner(m);
   const side=(nm,g,other)=>{
     if(!nm)return `<div class="side empty"><div class="crest" style="background:#222a44">?</div><div class="sn">Por definir</div><div class="sbox blank">–</div></div>`;
-    const pen = (m.a&&m.b&&m.ga!==''&&m.gb!==''&&+m.ga===+m.gb&&m.pen===nm)?'<span class="pentag">PEN</span>':'';
+    const pen = (m.a&&m.b&&m.ga!==''&&m.gb!==''&&+m.ga===+m.gb&&m.pen===nm)?'<span class="pentag">GANA</span>':'';
     return `<div class="side ${w===nm?'win':''}">${crest(nm)}<div class="sn">${nm}</div>${pen}<div class="sbox ${g===''?'blank':''}">${g===''?'–':g}</div></div>`;
   };
   const tap = (m.a&&m.b)?'tappable':'';
@@ -614,6 +622,7 @@ const phone=document.getElementById('phone');
 function curMatch(){return state.bracket[kb.key][kb.i];}
 function matchesInRound(){return state.bracket[kb.key];}
 function openKB(key,i){
+  if(!editableB()) return;   // Ventana B cerrada → solo lectura
   kb.open=true;kb.key=key;kb.i=i;
   phone.classList.add('kb-open');
   renderKB();
@@ -623,7 +632,7 @@ function openKB(key,i){
 }
 function closeKB(){kb.open=false;phone.classList.remove('kb-open');
   document.querySelectorAll('.match.active').forEach(x=>x.classList.remove('active'));updateHdrMin();}
-function kbSet(ga,gb){const m=curMatch();m.ga=ga;m.gb=gb;if(!(ga!==''&&gb!==''&&+ga===+gb))m.pen=null;renderBracket();}
+function kbSet(ga,gb){const m=curMatch();m.ga=ga;m.gb=gb;if(!(ga!==''&&gb!==''&&+ga===+gb))m.pen=null;markDirtyB();renderBracket();}
 function renderKB(){
   const m=curMatch();
   document.getElementById('kbTitle').innerHTML=`${crest(m.a)}<span class="nm">${m.a}</span><span class="vs">VS</span><span class="nm">${m.b}</span>${crest(m.b)}`;
@@ -635,15 +644,15 @@ function renderKB(){
   document.getElementById('kbStepB').innerHTML=[5,6,7,8,9].map(v=>step('b',v)).join('');
   const tie=m.a&&m.b&&m.ga!==''&&m.gb!==''&&+m.ga===+m.gb;
   document.getElementById('kbPens').innerHTML= tie?
-    `Empate · ¿quién pasa?<button class="pk ${m.pen===m.a?'on':''}" data-pen="${m.a}">${crest(m.a)}${m.a}</button><button class="pk ${m.pen===m.b?'on':''}" data-pen="${m.b}">${crest(m.b)}${m.b}</button>`:'';
+    `Empate a 90' · ¿quién pasa?<button class="pk ${m.pen===m.a?'on':''}" data-pen="${m.a}">${crest(m.a)}${m.a}</button><button class="pk ${m.pen===m.b?'on':''}" data-pen="${m.b}">${crest(m.b)}${m.b}</button>`:'';
   document.getElementById('kbPrev').disabled=kb.i<=0;
   document.getElementById('kbNext').disabled=kb.i>=matchesInRound().length-1;
   // bind
   document.querySelectorAll('#kbGrid .kb-key').forEach(k=>k.onclick=()=>{const[a,b]=k.dataset.sl.split('-');kbSet(a,b);});
   document.querySelectorAll('[data-step]').forEach(k=>k.onclick=()=>{
     const m=curMatch();const side=k.dataset.step, v=k.dataset.v;
-    if(side==='a')m.ga=v;else m.gb=v; if(!(m.ga!==''&&m.gb!==''&&+m.ga===+m.gb))m.pen=null; renderBracket();});
-  document.querySelectorAll('[data-pen]').forEach(k=>k.onclick=()=>{curMatch().pen=k.dataset.pen;renderBracket();});
+    if(side==='a')m.ga=v;else m.gb=v; if(!(m.ga!==''&&m.gb!==''&&+m.ga===+m.gb))m.pen=null; markDirtyB(); renderBracket();});
+  document.querySelectorAll('[data-pen]').forEach(k=>k.onclick=()=>{curMatch().pen=k.dataset.pen;markDirtyB();renderBracket();});
 }
 document.getElementById('kbPrev').onclick=()=>{if(kb.i>0)openKB(kb.key,kb.i-1);};
 document.getElementById('kbNext').onclick=()=>{if(kb.i<matchesInRound().length-1)openKB(kb.key,kb.i+1);};
@@ -687,21 +696,26 @@ function renderSummary(){
     </div>`;
 }
 
-/* ---------- Guardado / carga · Ventana A (Grupos + Playoff) ---------- */
+/* ---------- Guardado / carga · Ventanas A (Grupos+Playoff) y B (Eliminatorias) ---------- */
 const editableA = () => state.ventanaGP === 'abierta';
-function markDirty(){ if(!editableA()) return; state.dirty = true; updateSaveBar(); }
+const editableB = () => state.ventanaElim === 'abierta';
+function markDirtyA(){ if(!editableA()) return; state.dirtyA = true; updateSaveBar(); }
+function markDirtyB(){ if(!editableB()) return; state.dirtyB = true; updateSaveBar(); }
 
 const saveBar = document.getElementById('saveBar');
 function updateSaveBar(){
-  const onA = (idx===0 || idx===1);
-  saveBar.classList.toggle('show', onA);
-  if(!onA) return;
+  const onA = (idx===0 || idx===1), onB = (idx>=2 && idx<=5);
+  saveBar.classList.toggle('show', onA || onB);
+  if(!(onA || onB)) return;
   saveBar.classList.remove('dirty','saved','locked','busy');
-  if(!editableA()){ saveBar.classList.add('locked'); saveBar.textContent='🔒 Ventana cerrada · solo lectura'; saveBar.disabled=true; return; }
-  saveBar.disabled = !state.dirty;
-  if(state.dirty){ saveBar.classList.add('dirty'); saveBar.textContent='Guardar cambios'; }
-  else           { saveBar.classList.add('saved'); saveBar.textContent='Guardado ✓'; }
+  const editable = onA ? editableA() : editableB();
+  const dirty    = onA ? state.dirtyA : state.dirtyB;
+  if(!editable){ saveBar.classList.add('locked'); saveBar.textContent='🔒 Ventana cerrada · solo lectura'; saveBar.disabled=true; return; }
+  saveBar.disabled = !dirty;
+  if(dirty){ saveBar.classList.add('dirty'); saveBar.textContent='Guardar cambios'; }
+  else     { saveBar.classList.add('saved'); saveBar.textContent='Guardado ✓'; }
 }
+function onSaveClick(){ if(idx===0 || idx===1) saveVentanaA(); else if(idx>=2 && idx<=5) saveVentanaB(); }
 
 function buildBracketReal(rows){
   const key = r => ({R16:'r16',QF:'qf',SF:'sf',F:'fn'})[r];
@@ -720,9 +734,10 @@ function buildBracketReal(rows){
 async function cargarPronostico(){
   try{
     const byId = {}; state.order.forEach(n=> byId[state.id[n]] = n);
-    const [{ data:g }, { data:p }] = await Promise.all([
+    const [{ data:g }, { data:p }, { data:e }] = await Promise.all([
       sb.from('pronostico_grupos').select('equipo_id,puesto').eq('user_id', state.uid),
-      sb.from('pronostico_playoff').select('equipo_id').eq('user_id', state.uid)
+      sb.from('pronostico_playoff').select('equipo_id').eq('user_id', state.uid),
+      sb.from('pronostico_eliminatorias').select('cruce_id,goles_local,goles_visitante,ganador_id').eq('user_id', state.uid)
     ]);
     if(g && g.length === 36){
       const ord = new Array(36); let ok = true;
@@ -730,12 +745,19 @@ async function cargarPronostico(){
       if(ok && ord.every(Boolean)) state.order = ord;
     }
     if(p && p.length) state.advance = p.map(r=>byId[r.equipo_id]).filter(Boolean).slice(0,8);
-    state.dirty = false;
+    // eliminatorias: se guardan por cruce_id y se aplican al construir el bracket
+    state.elimSaved = {};
+    if(e) e.forEach(r=>{ state.elimSaved[r.cruce_id] = {
+      ga: r.goles_local==null ? '' : String(r.goles_local),
+      gb: r.goles_visitante==null ? '' : String(r.goles_visitante),
+      pen: r.ganador_id ? (state.nameBySlug[r.ganador_id] || null) : null
+    }; });
+    state.dirtyA = false; state.dirtyB = false;
   }catch(e){ console.warn('No se pudo cargar el pronóstico previo.', e); }
 }
 
 async function saveVentanaA(){
-  if(!editableA() || !state.dirty || !state.uid) return;
+  if(!editableA() || !state.dirtyA || !state.uid) return;
   const pool = state.order.slice(8,24);
   if(state.order.length !== 36){ toastSave('Faltan equipos por ordenar.', true); return; }
   if(state.advance.length !== 8){ toastSave('Elige exactamente 8 equipos en el playoff.', true); return; }
@@ -752,7 +774,33 @@ async function saveVentanaA(){
     r = await sb.from('pronostico_grupos').insert(filasG);               if(r.error) throw r.error;
     r = await sb.from('pronostico_playoff').delete().eq('user_id', uid); if(r.error) throw r.error;
     if(filasP.length){ r = await sb.from('pronostico_playoff').insert(filasP); if(r.error) throw r.error; }
-    state.dirty = false; updateSaveBar(); toastSave('Pronóstico guardado ✓', false);
+    state.dirtyA = false; updateSaveBar(); toastSave('Pronóstico guardado ✓', false);
+  }catch(e){
+    console.error(e); saveBar.classList.remove('busy');
+    toastSave('Error al guardar: ' + (e.message || e), true); updateSaveBar();
+  }
+}
+
+async function saveVentanaB(){
+  if(!editableB() || !state.dirtyB || !state.uid || !state.bracket) return;
+  // Recopilar solo las casillas con resultado (guardar a medias permitido)
+  const filas=[]; let empateSinPen=false;
+  ['r16','qf','sf','fn'].forEach(k=>state.bracket[k].forEach(m=>{
+    if(m.ga!=='' && m.gb!=='' && m.id){
+      if(+m.ga===+m.gb && !m.pen) empateSinPen=true;
+      filas.push({ user_id:state.uid, cruce_id:m.id,
+        goles_local:+m.ga, goles_visitante:+m.gb,
+        ganador_id: (+m.ga===+m.gb && m.pen) ? state.id[m.pen] : null });
+    }
+  }));
+  if(empateSinPen){ toastSave('Hay empates a 90\u2032 sin elegir quién pasa.', true); return; }
+
+  saveBar.classList.add('busy'); saveBar.textContent='Guardando…'; saveBar.disabled=true;
+  try{
+    const uid = state.uid; let r;
+    r = await sb.from('pronostico_eliminatorias').delete().eq('user_id', uid); if(r.error) throw r.error;
+    if(filas.length){ r = await sb.from('pronostico_eliminatorias').insert(filas); if(r.error) throw r.error; }
+    state.dirtyB = false; updateSaveBar(); toastSave('Eliminatorias guardadas ✓', false);
   }catch(e){
     console.error(e); saveBar.classList.remove('busy');
     toastSave('Error al guardar: ' + (e.message || e), true); updateSaveBar();
@@ -800,9 +848,9 @@ async function boot(){
   await cargarPronostico();
 
   buildGroup();
-  saveBar.addEventListener('click', saveVentanaA);
+  saveBar.addEventListener('click', onSaveClick);
   updateSaveBar();
-  window.addEventListener('beforeunload', e=>{ if(state.dirty){ e.preventDefault(); e.returnValue=''; } });
+  window.addEventListener('beforeunload', e=>{ if(state.dirtyA || state.dirtyB){ e.preventDefault(); e.returnValue=''; } });
 }
 function showUser(user){
   const brand = document.querySelector('header .brand');
@@ -812,7 +860,7 @@ function showUser(user){
   const name = (user.user_metadata && user.user_metadata.nombre) || (user.email||'').split('@')[0];
   chip.innerHTML = `<span class="un">${name}</span><span class="out">Salir</span>`;
   chip.onclick = async () => {
-    if(state.dirty && !confirm('Tienes cambios sin guardar. ¿Salir igualmente?')) return;
+    if((state.dirtyA || state.dirtyB) && !confirm('Tienes cambios sin guardar. ¿Salir igualmente?')) return;
     await sb.auth.signOut(); location.replace('login.html');
   };
   brand.appendChild(chip);
