@@ -46,6 +46,21 @@
   .userchip .un{font-family:Oswald;font-weight:600;font-size:12.5px;color:var(--text);max-width:120px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
   .userchip .out{font-size:10px;color:var(--faint);letter-spacing:.05em;text-transform:uppercase}
   .userchip:hover .out{color:var(--gold)}
+  .savebar{position:absolute;left:50%;transform:translateX(-50%);bottom:82px;z-index:7;display:none;
+    align-items:center;justify-content:center;gap:8px;font-family:Oswald;font-weight:600;font-size:13px;
+    letter-spacing:.04em;text-transform:uppercase;padding:12px 22px;border-radius:24px;border:none;cursor:pointer;
+    box-shadow:0 12px 28px -12px rgba(0,0,0,.75);transition:.2s;white-space:nowrap;max-width:calc(100% - 32px)}
+  .savebar.show{display:inline-flex}
+  .savebar.dirty{background:linear-gradient(180deg,var(--gold),var(--gold-dim));color:#150f00}
+  .savebar.saved{background:var(--panel2);color:var(--muted);border:1px solid var(--line2)}
+  .savebar.locked{background:var(--panel2);color:var(--faint);border:1px solid var(--line2);text-transform:none;font-family:Inter;font-size:12px}
+  .savebar:disabled{cursor:default}
+  .savebar.busy{opacity:.75;cursor:wait}
+  .save-toast{position:absolute;left:50%;transform:translateX(-50%);bottom:132px;z-index:8;
+    background:var(--panel2);border:1px solid var(--line2);color:var(--text);font-size:12.5px;
+    padding:9px 15px;border-radius:12px;max-width:calc(100% - 32px);text-align:center;opacity:0;pointer-events:none;transition:.2s}
+  .save-toast.show{opacity:1}
+  .save-toast.err{border-color:rgba(240,85,95,.5);color:#ffb3b7}
   .phase-strip{display:flex;gap:6px;margin-top:12px;transition:max-height .28s ease,opacity .22s ease,margin-top .28s ease;max-height:60px}
   .pchip{flex:1;text-align:center;padding:6px 4px 7px;border-radius:11px;
     background:rgba(255,255,255,.03);border:1px solid var(--line);cursor:pointer;transition:.25s;min-width:0}
@@ -337,6 +352,8 @@
     <div class="hint" id="hint">← desliza entre fases y rondas →</div>
   </div>
 
+  <button class="savebar" id="saveBar"></button>
+
   <nav class="tabbar" id="tabbar">
     <div class="tab on" data-go="0"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 6h16M4 12h16M4 18h10"/></svg><span>Grupos</span></div>
     <div class="tab" data-go="1"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M9 6l6 6-6 6"/><path d="M4 6l6 6-6 6" opacity=".4"/></svg><span>Playoff</span></div>
@@ -408,12 +425,14 @@ let TEAMS = [
   ["Milan","#c8202e"],["Chelsea","#1b4fbf"],["Mónaco","#c8102e"],["Celtic","#1a8a4c"]
 ];
 const abbr = n => n.replace(/[^A-Za-zÀ-ÿ0-9 ]/g,"").split(" ").map(w=>w[0]).join("").slice(0,3).toUpperCase();
-const state = { order:[], color:{}, logo:{}, advance:[], bracket:null };
+const slugify = s => s.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'');
+const state = { order:[], color:{}, logo:{}, id:{}, advance:[], bracket:null, uid:null, ventanaGP:'abierta', dirty:false };
 function loadTeams(teams){
   TEAMS = teams;
   state.order = TEAMS.map(t=>t[0]);
   state.color = Object.fromEntries(TEAMS.map(t=>[t[0],t[1]]));
   state.logo  = Object.fromEntries(TEAMS.filter(t=>t[2]).map(t=>[t[0],t[2]]));
+  state.id    = Object.fromEntries(TEAMS.map(t=>[t[0], t[2] ? t[2].replace(/\.svg$/,'') : slugify(t[0])]));
 }
 loadTeams(TEAMS);   // arranque con los de reserva; boot() los sustituye por los de la BD
 const crest = name => {
@@ -445,6 +464,7 @@ function goTo(i){
   if(inBracket) ensureBracket();
   if(idx===6) renderSummary();
   updateRoundBar();
+  updateSaveBar();
 }
 function updateRoundBar(){
   document.querySelectorAll('#roundBar .rtab').forEach(t=>{
@@ -495,8 +515,8 @@ function buildGroup(){
   }
   relayout();
   Sortable.create(groupList,{animation:160,handle:'.grip',filter:'.divider',ghostClass:'sortable-ghost',
-    forceFallback:true,fallbackTolerance:4,delayOnTouchOnly:true,delay:60,
-    onEnd:()=>{relayout();state.bracket=null;}});
+    forceFallback:true,fallbackTolerance:4,delayOnTouchOnly:true,delay:60,disabled:!editableA(),
+    onEnd:()=>{relayout();state.bracket=null;markDirty();}});
 }
 
 /* ---------- PLAYOFF ---------- */
@@ -514,10 +534,11 @@ function renderPlayoff(){
   list.querySelectorAll('.porow').forEach(row=>{
     if(full&&!row.classList.contains('pick'))row.classList.add('full');
     row.addEventListener('click',()=>{
+      if(!editableA()) return;
       const t=row.dataset.team;
       if(state.advance.includes(t))state.advance=state.advance.filter(x=>x!==t);
       else{if(state.advance.length>=8)return;state.advance.push(t);}
-      state.bracket=null; renderPlayoff();
+      state.bracket=null; markDirty(); renderPlayoff();
     });
   });
   document.getElementById('selPill').textContent=`${state.advance.length} / 8`;
@@ -654,18 +675,100 @@ function renderSummary(){
     </div>`;
 }
 
+/* ---------- Guardado / carga · Ventana A (Grupos + Playoff) ---------- */
+const editableA = () => state.ventanaGP === 'abierta';
+function markDirty(){ if(!editableA()) return; state.dirty = true; updateSaveBar(); }
+
+const saveBar = document.getElementById('saveBar');
+function updateSaveBar(){
+  const onA = (idx===0 || idx===1);
+  saveBar.classList.toggle('show', onA);
+  if(!onA) return;
+  saveBar.classList.remove('dirty','saved','locked','busy');
+  if(!editableA()){ saveBar.classList.add('locked'); saveBar.textContent='🔒 Ventana cerrada · solo lectura'; saveBar.disabled=true; return; }
+  saveBar.disabled = !state.dirty;
+  if(state.dirty){ saveBar.classList.add('dirty'); saveBar.textContent='Guardar cambios'; }
+  else           { saveBar.classList.add('saved'); saveBar.textContent='Guardado ✓'; }
+}
+
+async function cargarPronostico(){
+  try{
+    const byId = {}; state.order.forEach(n=> byId[state.id[n]] = n);
+    const [{ data:g }, { data:p }] = await Promise.all([
+      sb.from('pronostico_grupos').select('equipo_id,puesto').eq('user_id', state.uid),
+      sb.from('pronostico_playoff').select('equipo_id').eq('user_id', state.uid)
+    ]);
+    if(g && g.length === 36){
+      const ord = new Array(36); let ok = true;
+      g.forEach(r=>{ const nm = byId[r.equipo_id]; if(nm && r.puesto>=1 && r.puesto<=36) ord[r.puesto-1]=nm; else ok=false; });
+      if(ok && ord.every(Boolean)) state.order = ord;
+    }
+    if(p && p.length) state.advance = p.map(r=>byId[r.equipo_id]).filter(Boolean).slice(0,8);
+    state.dirty = false;
+  }catch(e){ console.warn('No se pudo cargar el pronóstico previo.', e); }
+}
+
+async function saveVentanaA(){
+  if(!editableA() || !state.dirty || !state.uid) return;
+  const pool = state.order.slice(8,24);
+  if(state.order.length !== 36){ toastSave('Faltan equipos por ordenar.', true); return; }
+  if(state.advance.length !== 8){ toastSave('Elige exactamente 8 equipos en el playoff.', true); return; }
+  if(!state.advance.every(t=>pool.includes(t))){ toastSave('Algún elegido no está en tu 9–24.', true); return; }
+
+  saveBar.classList.add('busy'); saveBar.textContent='Guardando…'; saveBar.disabled=true;
+  try{
+    const uid = state.uid;
+    const filasG = state.order.map((n,i)=>({ user_id:uid, equipo_id:state.id[n], puesto:i+1 }));
+    const filasP = state.advance.map(n=>({ user_id:uid, equipo_id:state.id[n] }));
+    let r;
+    // Regenerar en bloque (borrar + insertar); nunca parchear fila a fila.
+    r = await sb.from('pronostico_grupos').delete().eq('user_id', uid);  if(r.error) throw r.error;
+    r = await sb.from('pronostico_grupos').insert(filasG);               if(r.error) throw r.error;
+    r = await sb.from('pronostico_playoff').delete().eq('user_id', uid); if(r.error) throw r.error;
+    if(filasP.length){ r = await sb.from('pronostico_playoff').insert(filasP); if(r.error) throw r.error; }
+    state.dirty = false; updateSaveBar(); toastSave('Pronóstico guardado ✓', false);
+  }catch(e){
+    console.error(e); saveBar.classList.remove('busy');
+    toastSave('Error al guardar: ' + (e.message || e), true); updateSaveBar();
+  }
+}
+
+let toastTimer=null;
+function toastSave(msg, isErr){
+  let t=document.getElementById('saveToast');
+  if(!t){ t=document.createElement('div'); t.id='saveToast'; t.className='save-toast'; document.getElementById('phone').appendChild(t); }
+  t.textContent=msg; t.classList.toggle('err', !!isErr); t.classList.add('show');
+  clearTimeout(toastTimer); toastTimer=setTimeout(()=>t.classList.remove('show'), 2600);
+}
+
 async function boot(){
   let session = null;
   try { ({ data:{ session } } = await sb.auth.getSession()); } catch(e){ console.warn(e); }
   if(!session){ location.replace('login.html'); return; }        // guardián de sesión
+  state.uid = session.user.id;
   showUser(session.user);
+
+  // equipos
   try{
     const { data, error } = await sb.from('equipos')
       .select('id,nombre,color').eq('activo', true).order('nombre');
     if(error) throw error;
     if(data && data.length) loadTeams(data.map(e=>[e.nombre, e.color||'#334', e.id + '.svg']));
   }catch(e){ console.warn('Equipos de BD no disponibles; uso los de reserva.', e); }
+
+  // ¿está abierta la Ventana A?
+  try{
+    const { data } = await sb.from('config_torneo').select('ventana_gp').eq('id',1).single();
+    if(data) state.ventanaGP = data.ventana_gp;
+  }catch(e){ console.warn('config_torneo no disponible.', e); }
+
+  // pronóstico existente
+  await cargarPronostico();
+
   buildGroup();
+  saveBar.addEventListener('click', saveVentanaA);
+  updateSaveBar();
+  window.addEventListener('beforeunload', e=>{ if(state.dirty){ e.preventDefault(); e.returnValue=''; } });
 }
 function showUser(user){
   const brand = document.querySelector('header .brand');
@@ -674,7 +777,10 @@ function showUser(user){
   chip.className = 'userchip';
   const name = (user.user_metadata && user.user_metadata.nombre) || (user.email||'').split('@')[0];
   chip.innerHTML = `<span class="un">${name}</span><span class="out">Salir</span>`;
-  chip.onclick = async () => { await sb.auth.signOut(); location.replace('login.html'); };
+  chip.onclick = async () => {
+    if(state.dirty && !confirm('Tienes cambios sin guardar. ¿Salir igualmente?')) return;
+    await sb.auth.signOut(); location.replace('login.html');
+  };
   brand.appendChild(chip);
 }
 boot();
