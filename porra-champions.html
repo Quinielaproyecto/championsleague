@@ -426,13 +426,14 @@ let TEAMS = [
 ];
 const abbr = n => n.replace(/[^A-Za-zÀ-ÿ0-9 ]/g,"").split(" ").map(w=>w[0]).join("").slice(0,3).toUpperCase();
 const slugify = s => s.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'');
-const state = { order:[], color:{}, logo:{}, id:{}, advance:[], bracket:null, uid:null, ventanaGP:'abierta', dirty:false };
+const state = { order:[], color:{}, logo:{}, id:{}, nameBySlug:{}, advance:[], bracket:null, bracketReal:null, uid:null, ventanaGP:'abierta', ventanaElim:'pendiente', dirty:false };
 function loadTeams(teams){
   TEAMS = teams;
   state.order = TEAMS.map(t=>t[0]);
   state.color = Object.fromEntries(TEAMS.map(t=>[t[0],t[1]]));
   state.logo  = Object.fromEntries(TEAMS.filter(t=>t[2]).map(t=>[t[0],t[2]]));
   state.id    = Object.fromEntries(TEAMS.map(t=>[t[0], t[2] ? t[2].replace(/\.svg$/,'') : slugify(t[0])]));
+  state.nameBySlug = Object.fromEntries(Object.entries(state.id).map(([n,s])=>[s,n]));
 }
 loadTeams(TEAMS);   // arranque con los de reserva; boot() los sustituye por los de la BD
 const crest = name => {
@@ -516,7 +517,7 @@ function buildGroup(){
   relayout();
   Sortable.create(groupList,{animation:160,handle:'.grip',filter:'.divider',ghostClass:'sortable-ghost',
     forceFallback:true,fallbackTolerance:4,delayOnTouchOnly:true,delay:60,disabled:!editableA(),
-    onEnd:()=>{relayout();state.bracket=null;markDirty();}});
+    onEnd:()=>{relayout();markDirty();}});
 }
 
 /* ---------- PLAYOFF ---------- */
@@ -538,7 +539,7 @@ function renderPlayoff(){
       const t=row.dataset.team;
       if(state.advance.includes(t))state.advance=state.advance.filter(x=>x!==t);
       else{if(state.advance.length>=8)return;state.advance.push(t);}
-      state.bracket=null; markDirty(); renderPlayoff();
+      markDirty(); renderPlayoff();
     });
   });
   document.getElementById('selPill').textContent=`${state.advance.length} / 8`;
@@ -546,13 +547,24 @@ function renderPlayoff(){
 
 /* ---------- BRACKET ---------- */
 const ROUNDS=[['r16','Octavos',8],['qf','Cuartos',4],['sf','Semis',2],['fn','Final',1]];
-const blank=()=>({a:null,b:null,ga:'',gb:'',pen:null});
+const blank=()=>({a:null,b:null,ga:'',gb:'',pen:null,id:null});
 function ensureBracket(){
-  const qual=state.order.slice(0,8), adv=[...state.advance];
-  const seed=JSON.stringify([qual,adv]);
-  if(!state.bracket || state.bracket._seed!==seed){
-    const r16=[];for(let i=0;i<8;i++){const m=blank();m.a=qual[i]||null;m.b=adv[i]||null;r16.push(m);}
-    state.bracket={_seed:seed,r16,qf:[blank(),blank(),blank(),blank()],sf:[blank(),blank()],fn:[blank()]};
+  if(!state.bracket){
+    if(state.bracketReal){
+      // Cuadro REAL: octavos con equipos de admin; cuartos+ vacíos (se derivan de los ganadores)
+      const mk = slot => { const m=blank(); if(slot){ m.a=slot.a; m.b=slot.b; m.id=slot.id; } return m; };
+      state.bracket = {
+        r16: state.bracketReal.r16.map(mk),
+        qf:  state.bracketReal.qf.map(mk),
+        sf:  state.bracketReal.sf.map(mk),
+        fn:  state.bracketReal.fn.map(mk)
+      };
+    } else {
+      // Reserva (sin BD): sembrar desde las predicciones del jugador
+      const qual=state.order.slice(0,8), adv=[...state.advance];
+      const r16=[];for(let i=0;i<8;i++){const m=blank();m.a=qual[i]||null;m.b=adv[i]||null;r16.push(m);}
+      state.bracket={r16,qf:[blank(),blank(),blank(),blank()],sf:[blank(),blank()],fn:[blank()]};
+    }
   }
   renderBracket();
 }
@@ -691,6 +703,20 @@ function updateSaveBar(){
   else           { saveBar.classList.add('saved'); saveBar.textContent='Guardado ✓'; }
 }
 
+function buildBracketReal(rows){
+  const key = r => ({R16:'r16',QF:'qf',SF:'sf',F:'fn'})[r];
+  const byRound = { r16:[], qf:[], sf:[], fn:[] };
+  rows.slice().sort((a,b)=>a.idx-b.idx).forEach(r=>{
+    const k = key(r.ronda); if(!k) return;
+    byRound[k].push({
+      id: r.id,
+      a: r.equipo_local     ? (state.nameBySlug[r.equipo_local]     || r.equipo_local)     : null,
+      b: r.equipo_visitante ? (state.nameBySlug[r.equipo_visitante] || r.equipo_visitante) : null
+    });
+  });
+  state.bracketReal = byRound;
+}
+
 async function cargarPronostico(){
   try{
     const byId = {}; state.order.forEach(n=> byId[state.id[n]] = n);
@@ -756,11 +782,19 @@ async function boot(){
     if(data && data.length) loadTeams(data.map(e=>[e.nombre, e.color||'#334', e.id + '.svg']));
   }catch(e){ console.warn('Equipos de BD no disponibles; uso los de reserva.', e); }
 
-  // ¿está abierta la Ventana A?
+  // ¿estado de las ventanas?
   try{
-    const { data } = await sb.from('config_torneo').select('ventana_gp').eq('id',1).single();
-    if(data) state.ventanaGP = data.ventana_gp;
+    const { data } = await sb.from('config_torneo').select('ventana_gp,ventana_elim').eq('id',1).single();
+    if(data){ state.ventanaGP = data.ventana_gp; state.ventanaElim = data.ventana_elim; }
   }catch(e){ console.warn('config_torneo no disponible.', e); }
+
+  // cuadro real de eliminatorias (octavos con equipos de admin; cuartos+ vacíos)
+  try{
+    const { data, error } = await sb.from('bracket_cruces')
+      .select('id,ronda,idx,equipo_local,equipo_visitante,feeds_id,feeds_pos').order('idx');
+    if(error) throw error;
+    if(data && data.length) buildBracketReal(data);
+  }catch(e){ console.warn('bracket_cruces no disponible; el bracket usará reserva.', e); }
 
   // pronóstico existente
   await cargarPronostico();
