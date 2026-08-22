@@ -184,6 +184,13 @@
 
     <button class="savebtn" id="saveTab0">Guardar ventanas y reglas</button>
     <div class="msg" id="msg0"></div>
+
+    <div class="card" style="margin-top:14px">
+      <h2>Puntuaciones</h2>
+      <p class="desc">Pulsa cuando hayas terminado de meter resultados. Recalcula todos los jugadores (R1–R4 + detalle) y actualiza la clasificación que ven en la web de resultados.</p>
+      <button class="savebtn" id="btnRecalc">↻ Recalcular puntuaciones</button>
+      <div class="msg" id="msgRC"></div>
+    </div>
   </section>
 
   <!-- ===== TAB 1: Resultados ===== -->
@@ -224,6 +231,7 @@
 
 <script type="module">
   import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
+  import { calcularTodos } from './puntuacion.js'
   const SUPABASE_URL = 'https://vucyzvyohltyontitcfr.supabase.co'
   const SUPABASE_KEY = 'sb_publishable_i_RtEH-_kVhcJcoTsyVfkA_xxWrkmzd'
   const sb = createClient(SUPABASE_URL, SUPABASE_KEY)
@@ -511,6 +519,54 @@
   }
   $('saveGrupos').onclick = saveGrupos
   $('savePlayoff').onclick = savePlayoff
+
+  /* ===== Recalcular puntuaciones (botón manual) ===== */
+  function setMsgRC(t,k){ const m=$('msgRC'); m.textContent=t; m.className='msg show '+k }
+  $('btnRecalc').onclick = async () => {
+    const btn=$('btnRecalc'); btn.disabled=true; const t=btn.textContent; btn.textContent='Recalculando…'
+    try{
+      // 1) Reglas + realidad + jugadores + todos los pronósticos
+      const [ reglasR, ligaR, poffR, crucesR, profR, pgR, ppR, peR ] = await Promise.all([
+        sb.from('config_reglas').select('*').eq('id',1).single(),
+        sb.from('resultado_liga').select('equipo_id,puesto'),
+        sb.from('resultado_playoff').select('equipo_id'),
+        sb.from('bracket_cruces').select('*'),
+        sb.from('profiles').select('id,nombre'),
+        sb.from('pronostico_grupos').select('user_id,equipo_id,puesto'),
+        sb.from('pronostico_playoff').select('user_id,equipo_id'),
+        sb.from('pronostico_eliminatorias').select('user_id,cruce_id,goles_local,goles_visitante,ganador_id')
+      ])
+      for(const r of [reglasR,ligaR,poffR,crucesR,profR,pgR,ppR,peR]) if(r.error) throw r.error
+
+      const posLigaReal = Object.fromEntries((ligaR.data||[]).map(r=>[r.equipo_id, r.puesto]))
+      const playoffReal = (poffR.data||[]).map(r=>r.equipo_id)
+      const cruces = {}; (crucesR.data||[]).forEach(c=>cruces[c.id]=c)
+
+      // Agrupar pronósticos por jugador
+      const byUser = {}
+      const ensure = id => (byUser[id] = byUser[id] || { grupos:{}, playoff:[], elim:{} })
+      ;(pgR.data||[]).forEach(r=>{ ensure(r.user_id).grupos[r.equipo_id]=r.puesto })
+      ;(ppR.data||[]).forEach(r=>{ ensure(r.user_id).playoff.push(r.equipo_id) })
+      ;(peR.data||[]).forEach(r=>{ ensure(r.user_id).elim[r.cruce_id]={gl:r.goles_local,gv:r.goles_visitante,gana:r.ganador_id} })
+
+      const jugadores = (profR.data||[]).map(p=>({
+        uid:p.id, nombre:p.nombre,
+        grupos:(byUser[p.id]||{}).grupos||{},
+        playoff:(byUser[p.id]||{}).playoff||[],
+        elim:(byUser[p.id]||{}).elim||{}
+      }))
+
+      // 2) Calcular (única fuente)
+      const filas = calcularTodos({ reglas:reglasR.data, posLigaReal, playoffReal, cruces, jugadores })
+        .map(f=>({ ...f, updated_at:new Date().toISOString() }))
+
+      // 3) Guardar en puntuaciones (upsert por user_id)
+      const { data, error } = await sb.from('puntuaciones').upsert(filas, { onConflict:'user_id' }).select('user_id')
+      if(error) throw error
+      setMsgRC(`Recalculado ✓ · ${data?data.length:0} jugadores`,'ok')
+    }catch(e){ console.error(e); setMsgRC('Error: '+(e.message||e),'err') }
+    finally{ btn.disabled=false; btn.textContent=t }
+  }
 
   async function saveRound(r){
     const btn=document.querySelector(`[data-round="${r}"]`); if(btn){ btn.disabled=true; btn.textContent='Guardando…' }

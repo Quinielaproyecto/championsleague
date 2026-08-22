@@ -1,0 +1,281 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Porra Champions · Resultados</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Oswald:wght@300;400;500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#070b18; --bg2:#0b1024; --panel:#121a34; --panel2:#19224a;
+    --line:rgba(255,255,255,.09); --line2:rgba(255,255,255,.16);
+    --text:#eef1fb; --muted:#8890b4; --faint:#5a628a;
+    --gold:#f4b740; --gold-dim:#b9871f; --cyan:#74e4ff;
+    --ok:#37d67a; --po:#ff9f43; --err:#f0555f;
+    --colw:132px; --firstw:172px;
+  }
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+  html,body{margin:0;min-height:100%;background:
+      radial-gradient(120% 40% at 50% -5%, rgba(116,228,255,.10), transparent 60%),
+      linear-gradient(180deg,var(--bg2),var(--bg) 45%);
+    color:var(--text);font-family:Inter,system-ui,sans-serif}
+  body{min-height:100vh;padding:16px 0 60px}
+  .wrap{max-width:1200px;margin:0 auto;padding:0 14px}
+
+  header{display:flex;align-items:center;gap:11px;margin-bottom:14px}
+  .starball{width:32px;height:32px;flex:0 0 auto}
+  .htitle{font-family:Oswald;font-weight:700;font-size:21px;text-transform:uppercase;line-height:1}
+  .htitle b{color:var(--gold)}
+  .nav{margin-left:auto;display:flex;gap:8px}
+  .nav a{font-family:Oswald;font-size:11px;font-weight:600;letter-spacing:.05em;text-transform:uppercase;
+    color:var(--muted);text-decoration:none;border:1px solid var(--line);border-radius:9px;padding:7px 11px}
+  .nav a:hover{color:var(--gold);border-color:var(--line2)}
+
+  /* Podio / clasificación resumida */
+  .rank{display:flex;gap:8px;overflow-x:auto;padding:2px 0 12px;-webkit-overflow-scrolling:touch}
+  .rank::-webkit-scrollbar{height:0}
+  .rcard{flex:0 0 auto;min-width:96px;background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:9px 12px;text-align:center;position:relative}
+  .rcard .pos{font-family:Oswald;font-size:10px;color:var(--faint);letter-spacing:.08em}
+  .rcard .nm{font-family:Oswald;font-weight:600;font-size:13px;margin:2px 0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:120px}
+  .rcard .pt{font-family:Oswald;font-weight:700;font-size:20px;color:var(--gold);font-variant-numeric:tabular-nums}
+  .rcard.first{border-color:rgba(244,183,64,.5);background:radial-gradient(120% 100% at 50% 0%,rgba(244,183,64,.14),transparent 70%),var(--panel)}
+
+  .tabs{display:flex;gap:6px;margin:6px 0 12px;background:rgba(255,255,255,.03);border:1px solid var(--line);border-radius:12px;padding:4px;flex-wrap:wrap}
+  .tabs button{flex:1;min-width:80px;font-family:Oswald;font-weight:600;font-size:12px;letter-spacing:.03em;text-transform:uppercase;
+    padding:9px 6px;border:none;border-radius:9px;background:transparent;color:var(--muted);cursor:pointer;transition:.2s}
+  .tabs button.on{background:linear-gradient(180deg,var(--panel2),var(--panel));color:var(--gold);border:1px solid var(--line2)}
+
+  /* Tabla */
+  .tablecard{background:var(--panel);border:1px solid var(--line);border-radius:14px;overflow:hidden}
+  .scroller{overflow-x:auto;-webkit-overflow-scrolling:touch}
+  table{border-collapse:separate;border-spacing:0;width:max-content;min-width:100%}
+  th,td{padding:8px 10px;font-size:12.5px;text-align:center;border-bottom:1px solid var(--line);border-right:1px solid var(--line);white-space:nowrap}
+  thead th{position:sticky;top:0;z-index:2;background:var(--panel2);font-family:Oswald;font-weight:600;letter-spacing:.03em}
+  /* primera columna fija */
+  th.first,td.first{position:sticky;left:0;z-index:1;background:var(--panel);text-align:left;min-width:var(--firstw);max-width:var(--firstw)}
+  thead th.first{z-index:3;background:var(--panel2)}
+  td.col,th.col{min-width:var(--colw);max-width:var(--colw)}
+  tbody tr:nth-child(even) td{background:rgba(255,255,255,.015)}
+  tbody tr:nth-child(even) td.first{background:#141b36}
+
+  .teamcell{display:flex;align-items:center;gap:8px}
+  .crest{width:24px;height:24px;border-radius:6px;flex:0 0 auto;display:flex;align-items:center;justify-content:center;
+    overflow:hidden;font-family:Oswald;font-weight:700;font-size:10px;color:#0a0e1c;background:#222a44}
+  .crest.logo{background:#fff;padding:2px}.crest.logo img{width:100%;height:100%;object-fit:contain;display:block}
+  .tn{font-weight:600;font-size:12.5px;overflow:hidden;text-overflow:ellipsis}
+  .sub{color:var(--faint);font-size:10.5px;font-weight:500}
+  .realres{font-family:Oswald;font-weight:600;color:var(--text)}
+
+  .cell{display:flex;flex-direction:column;align-items:center;gap:2px;line-height:1.15}
+  .cell .pron{font-size:12px;color:var(--muted)}
+  .cell .pron b{color:var(--text);font-weight:600}
+  .pts{font-family:Oswald;font-weight:700;font-size:13px;font-variant-numeric:tabular-nums;padding:0 6px;border-radius:20px}
+  .pts.p0{color:var(--faint)}
+  .pts.pos{color:#0a0e1c;background:var(--ok)}
+  .rpos{font-family:Oswald;font-weight:600;color:var(--muted);width:22px;text-align:center}
+  .badge{font-family:Oswald;font-size:10px;font-weight:600;padding:2px 7px;border-radius:20px}
+  .b-si{background:rgba(55,214,122,.16);color:var(--ok)} .b-no{background:rgba(240,85,95,.14);color:#ffb3b7}
+  .tier{font-family:Oswald;font-weight:700;font-size:13px}
+  .mline{display:flex;align-items:center;gap:4px;justify-content:center}
+  .mline .crest{width:20px;height:20px;font-size:9px}
+  .mline .mg{font-family:Oswald;font-weight:600;font-size:13px;font-variant-numeric:tabular-nums;padding:0 2px;white-space:nowrap}
+  .mline .arrow{color:var(--faint);font-weight:700;margin:0 1px}
+  td.first .mline{justify-content:flex-start}
+  .totalrow td{background:var(--panel2)!important;border-bottom:2px solid var(--line2)}
+  .totalrow .pts{font-size:15px;color:var(--gold)}
+  .center-note{max-width:520px;margin:70px auto;text-align:center;color:var(--muted);line-height:1.5}
+  .center-note a{color:var(--gold)}
+</style>
+</head>
+<body>
+<div class="wrap" id="wrap" style="display:none">
+  <header>
+    <svg class="starball" viewBox="0 0 40 40" fill="none">
+      <circle cx="20" cy="20" r="18" fill="#0e1530" stroke="#2a355f"/>
+      <path d="M20 7l2.6 5.3 5.9.9-4.3 4.1 1 5.8L20 26l-5.2 2.7 1-5.8-4.3-4.1 5.9-.9z" fill="#f4b740"/>
+    </svg>
+    <div class="htitle">Porra <b>Champions</b> · Resultados</div>
+    <div class="nav"><a href="porra-champions.html">Mi porra</a></div>
+  </header>
+
+  <div class="rank" id="rank"></div>
+
+  <div class="tabs">
+    <button data-tab="grupos" class="on">Grupos</button>
+    <button data-tab="playoff">Playoff</button>
+    <button data-tab="elim">Eliminatorias</button>
+    <button data-tab="posfinal">Posición final</button>
+  </div>
+
+  <div class="tablecard"><div class="scroller"><table id="tbl"></table></div></div>
+</div>
+
+<div class="center-note" id="gate">Cargando resultados…</div>
+
+<script type="module">
+  import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
+  const SUPABASE_URL = 'https://vucyzvyohltyontitcfr.supabase.co'
+  const SUPABASE_KEY = 'sb_publishable_i_RtEH-_kVhcJcoTsyVfkA_xxWrkmzd'
+  const sb = createClient(SUPABASE_URL, SUPABASE_KEY)
+  const $ = id => document.getElementById(id)
+
+  const abbr = n => (n||'').replace(/[^A-Za-zÀ-ÿ0-9 ]/g,'').split(' ').map(w=>w[0]).join('').slice(0,3).toUpperCase()
+  let colorById={}, nombreById={}
+  function crest(id){
+    if(!id) return `<span class="crest">?</span>`
+    return `<span class="crest logo"><img src="escudos/${id}.svg" alt="" onerror="this.parentNode.classList.remove('logo');this.parentNode.style.background='${colorById[id]||'#334'}';this.parentNode.textContent='${abbr(nombreById[id])}'"></span>`
+  }
+  const nom = id => nombreById[id] || id || '—'
+  const RONDA = {R16:'Octavos',QF:'Cuartos',SF:'Semis',F:'Final'}
+  const TIER  = {'1':'Campeón','2':'Subcampeón','S':'Semifinal','C':'Cuartos','O':'Octavos'}
+
+  let jugadores=[], equipos=[], cruces={}, ligaReal={}, playoffReal=[]
+
+  // ---- Guardián de sesión ----
+  const { data:{ session } } = await sb.auth.getSession()
+  if(!session){ location.replace('login.html') }
+  else { await cargar(); }
+
+  async function cargar(){
+    const [ punt, eq, cr, lg, pf ] = await Promise.all([
+      sb.from('puntuaciones').select('user_id,nombre,total,r1_grupos,r2_playoff,r3_elim,r4_pos,detalle').order('total',{ascending:false}),
+      sb.from('equipos').select('id,nombre,color'),
+      sb.from('bracket_cruces').select('*').order('idx'),
+      sb.from('resultado_liga').select('equipo_id,puesto'),
+      sb.from('resultado_playoff').select('equipo_id')
+    ])
+    if(punt.error){ $('gate').textContent='Error al cargar: '+punt.error.message; return }
+    jugadores = punt.data || []
+    equipos = eq.data || []
+    colorById = Object.fromEntries(equipos.map(e=>[e.id,e.color||'#334']))
+    nombreById = Object.fromEntries(equipos.map(e=>[e.id,e.nombre]))
+    cruces = {}; (cr.data||[]).forEach(c=>cruces[c.id]=c)
+    ligaReal = Object.fromEntries((lg.data||[]).map(r=>[r.equipo_id,r.puesto]))
+    playoffReal = (pf.data||[]).map(r=>r.equipo_id)
+
+    if(jugadores.length===0){ $('gate').innerHTML='Aún no hay puntuaciones. El admin debe pulsar “Recalcular puntuaciones”.'; return }
+    $('gate').style.display='none'; $('wrap').style.display='block'
+    renderRank(); initTabs(); render('grupos')
+  }
+
+  function renderRank(){
+    $('rank').innerHTML = jugadores.map((j,i)=>`
+      <div class="rcard ${i===0?'first':''}"><div class="pos">${i+1}º</div>
+        <div class="nm">${j.nombre||'—'}</div><div class="pt">${j.total}</div></div>`).join('')
+  }
+  function initTabs(){
+    document.querySelectorAll('.tabs button').forEach(b=>b.onclick=()=>{
+      document.querySelectorAll('.tabs button').forEach(x=>x.classList.toggle('on',x===b))
+      render(b.dataset.tab)
+    })
+  }
+
+  // Cabecera de columnas de jugadores + fila de totales
+  function headRow(){
+    return `<tr><th class="first">Equipo / Partido</th>${jugadores.map(j=>`<th class="col">${j.nombre||'—'}</th>`).join('')}</tr>`
+  }
+  function pts(p){ return `<span class="pts ${p>0?'pos':'p0'}">${p>0?'+':''}${p}</span>` }
+
+  function render(tab){
+    const tbl=$('tbl')
+    if(tab==='grupos') tbl.innerHTML = renderGrupos()
+    else if(tab==='playoff') tbl.innerHTML = renderPlayoff()
+    else if(tab==='elim') tbl.innerHTML = renderElim()
+    else tbl.innerHTML = renderPos()
+  }
+
+  // ---- GRUPOS ----
+  function renderGrupos(){
+    // filas = 36 equipos en orden real; si no hay realidad, orden por id
+    const orden = Object.keys(ligaReal).length
+      ? Object.entries(ligaReal).sort((a,b)=>a[1]-b[1]).map(e=>e[0])
+      : equipos.map(e=>e.id)
+    const totals = `<tr class="totalrow"><td class="first">TOTAL grupos</td>${jugadores.map(j=>`<td class="col">${pts(j.r1_grupos||0)}</td>`).join('')}</tr>`
+    const rows = orden.map(id=>{
+      const real = ligaReal[id]
+      const first = `<td class="first"><div class="teamcell"><span class="rpos">${real??'–'}</span>${crest(id)}<span class="tn">${nom(id)}</span></div></td>`
+      const cells = jugadores.map(j=>{
+        const d=(j.detalle&&j.detalle.grupos&&j.detalle.grupos[id])||null
+        if(!d) return `<td class="col"><span class="pts p0">–</span></td>`
+        return `<td class="col"><div class="cell"><span class="pron">pos <b>${d.pos_prevista??'–'}</b></span>${pts(d.puntos||0)}</div></td>`
+      }).join('')
+      return `<tr>${first}${cells}</tr>`
+    }).join('')
+    return `<thead>${headRow()}</thead><tbody>${totals}${rows}</tbody>`
+  }
+
+  // ---- PLAYOFF ----
+  function renderPlayoff(){
+    const filas = playoffReal.length ? playoffReal : []
+    const totals = `<tr class="totalrow"><td class="first">TOTAL playoff</td>${jugadores.map(j=>`<td class="col">${pts(j.r2_playoff||0)}</td>`).join('')}</tr>`
+    if(!filas.length) return `<thead>${headRow()}</thead><tbody>${totals}<tr><td class="first">—</td>${jugadores.map(()=>'<td class="col">–</td>').join('')}</tr></tbody>`
+    const rows = filas.map(id=>{
+      const first = `<td class="first"><div class="teamcell">${crest(id)}<span class="tn">${nom(id)}</span></div></td>`
+      const cells = jugadores.map(j=>{
+        const d=(j.detalle&&j.detalle.playoff&&j.detalle.playoff[id])||null
+        const si = d && d.previsto
+        return `<td class="col"><div class="cell"><span class="badge ${si?'b-si':'b-no'}">${si?'sí':'no'}</span>${pts(d?d.puntos:0)}</div></td>`
+      }).join('')
+      return `<tr>${first}${cells}</tr>`
+    }).join('')
+    return `<thead>${headRow()}</thead><tbody>${totals}${rows}</tbody>`
+  }
+
+  // ---- ELIMINATORIAS ----
+  function ganador(local,vis,gl,gv,gana){
+    if(local==null||vis==null||gl==null||gv==null) return null
+    if(gl>gv) return local; if(gv>gl) return vis; return gana||null
+  }
+  function renderElim(){
+    const orden = ['R16-1','R16-2','R16-3','R16-4','R16-5','R16-6','R16-7','R16-8','QF-1','QF-2','QF-3','QF-4','SF-1','SF-2','F']
+    const totals = `<tr class="totalrow"><td class="first">TOTAL eliminatorias</td>${jugadores.map(j=>`<td class="col">${pts(j.r3_elim||0)}</td>`).join('')}</tr>`
+    const rows = orden.filter(id=>cruces[id]).map(id=>{
+      const c=cruces[id]
+      const rg = ganador(c.equipo_local,c.equipo_visitante,c.goles_local,c.goles_visitante,c.ganador_id)
+      const first = `<td class="first"><div style="display:flex;flex-direction:column;gap:3px">
+        <span class="sub">${RONDA[c.ronda]||c.ronda}</span>
+        ${matchLine(c.equipo_local,c.equipo_visitante,c.goles_local,c.goles_visitante,rg)}</div></td>`
+      const cells = jugadores.map(j=>{
+        const d=(j.detalle&&j.detalle.elim&&j.detalle.elim[id])||null
+        if(!d || d.pron.gl==null) return `<td class="col"><span class="pts p0">–</span></td>`
+        const p=d.pron
+        return `<td class="col"><div class="cell">${matchLine(p.local,p.visitante,p.gl,p.gv,p.gana)}${pts(d.puntos||0)}</div></td>`
+      }).join('')
+      return `<tr>${first}${cells}</tr>`
+    }).join('')
+    return `<thead>${headRow()}</thead><tbody>${totals}${rows}</tbody>`
+  }
+  // Línea de partido con escudos: [esc]local G–G [esc]vis › [esc]ganador
+  function matchLine(local,vis,gl,gv,gana){
+    const sc = (gl!=null&&gv!=null) ? `<b>${gl}</b>–<b>${gv}</b>` : '–&nbsp;–'
+    const win = gana ? `<span class="arrow">›</span>${crest(gana)}` : ''
+    return `<div class="mline">${crest(local)}<span class="mg">${sc}</span>${crest(vis)}${win}</div>`
+  }
+
+  // ---- POSICIÓN FINAL ----
+  function renderPos(){
+    // filas = 16 equipos reales de octavos
+    const r16 = []
+    Object.values(cruces).filter(c=>c.ronda==='R16').sort((a,b)=>a.idx-b.idx).forEach(c=>{
+      if(c.equipo_local) r16.push(c.equipo_local); if(c.equipo_visitante) r16.push(c.equipo_visitante)
+    })
+    const totals = `<tr class="totalrow"><td class="first">TOTAL posición</td>${jugadores.map(j=>`<td class="col">${pts(j.r4_pos||0)}</td>`).join('')}</tr>`
+    const rows = r16.map(id=>{
+      // ronda real donde cayó: la sacamos del detalle del primer jugador (real es igual para todos)
+      let real=null
+      for(const j of jugadores){ const d=j.detalle&&j.detalle.posfinal&&j.detalle.posfinal[id]; if(d){ real=d.real; break } }
+      const first = `<td class="first"><div class="teamcell">${crest(id)}<span class="tn">${nom(id)}</span><span class="sub">${real?('· '+(TIER[real]||real)):''}</span></div></td>`
+      const cells = jugadores.map(j=>{
+        const d=(j.detalle&&j.detalle.posfinal&&j.detalle.posfinal[id])||null
+        const prev = d && d.prevista ? (TIER[d.prevista]||d.prevista) : '–'
+        return `<td class="col"><div class="cell"><span class="pron">${prev}</span>${pts(d?d.puntos:0)}</div></td>`
+      }).join('')
+      return `<tr>${first}${cells}</tr>`
+    }).join('')
+    return `<thead>${headRow()}</thead><tbody>${totals}${rows}</tbody>`
+  }
+</script>
+</body>
+</html>
