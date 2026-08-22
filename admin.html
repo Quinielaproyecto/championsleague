@@ -1,0 +1,543 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Porra Champions · Admin</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Oswald:wght@300;400;500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Sortable/1.15.2/Sortable.min.js"></script>
+<style>
+  :root{
+    --bg:#070b18; --bg2:#0b1024; --panel:#121a34; --panel2:#19224a;
+    --line:rgba(255,255,255,.09); --line2:rgba(255,255,255,.16);
+    --text:#eef1fb; --muted:#8890b4; --faint:#5a628a;
+    --gold:#f4b740; --gold-dim:#b9871f; --cyan:#74e4ff;
+    --ok:#37d67a; --err:#f0555f; --po:#ff9f43;
+  }
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+  html,body{margin:0;min-height:100%;background:
+      radial-gradient(120% 40% at 50% -5%, rgba(116,228,255,.12), transparent 60%),
+      linear-gradient(180deg,var(--bg2),var(--bg) 45%);
+    color:var(--text);font-family:Inter,system-ui,sans-serif}
+  body{min-height:100vh;padding:18px 16px 60px}
+  .wrap{max-width:720px;margin:0 auto}
+
+  header{display:flex;align-items:center;gap:11px;margin-bottom:16px}
+  .starball{width:34px;height:34px;flex:0 0 auto}
+  .htitle{font-family:Oswald;font-weight:700;font-size:22px;text-transform:uppercase;line-height:1}
+  .htitle b{color:var(--gold)}
+  .badge{font-family:Oswald;font-size:10px;font-weight:600;letter-spacing:.12em;text-transform:uppercase;
+    color:var(--cyan);border:1px solid rgba(116,228,255,.4);border-radius:20px;padding:2px 9px;margin-left:2px}
+  .userchip{margin-left:auto;display:flex;flex-direction:column;align-items:flex-end;background:transparent;border:none;cursor:pointer;padding:2px 0}
+  .userchip .un{font-family:Oswald;font-weight:600;font-size:12.5px;color:var(--text)}
+  .userchip .out{font-size:10px;color:var(--faint);letter-spacing:.05em;text-transform:uppercase}
+  .userchip:hover .out{color:var(--gold)}
+
+  .tabs{display:flex;gap:6px;margin-bottom:16px;background:rgba(255,255,255,.03);border:1px solid var(--line);border-radius:12px;padding:4px}
+  .tabs button{flex:1;font-family:Oswald;font-weight:600;font-size:12px;letter-spacing:.04em;text-transform:uppercase;
+    padding:9px 6px;border:none;border-radius:9px;background:transparent;color:var(--muted);cursor:pointer;transition:.2s}
+  .tabs button.on{background:linear-gradient(180deg,var(--panel2),var(--panel));color:var(--gold);border:1px solid var(--line2)}
+
+  .panel{display:none} .panel.on{display:block}
+  .card{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:16px;margin-bottom:14px}
+  .card h2{font-family:Oswald;font-size:15px;font-weight:600;letter-spacing:.05em;text-transform:uppercase;margin:0 0 14px;color:var(--text)}
+  .card p.desc{margin:-8px 0 14px;font-size:12.5px;color:var(--muted);line-height:1.4}
+
+  .row{display:flex;align-items:center;gap:12px;padding:9px 0;border-top:1px solid var(--line)}
+  .row:first-of-type{border-top:none}
+  .row label{flex:1;font-size:14px;font-weight:600}
+  .row label small{display:block;font-weight:400;font-size:11.5px;color:var(--faint);margin-top:2px}
+  select,input[type=number]{background:var(--bg);border:1px solid var(--line2);border-radius:10px;color:var(--text);
+    font-family:Inter;font-size:14px;padding:9px 11px}
+  select{min-width:150px;cursor:pointer}
+  input[type=number]{width:74px;text-align:center;font-family:Oswald;font-weight:600;font-size:15px}
+  input:focus,select:focus{outline:none;border-color:var(--gold)}
+
+  .matrix{overflow-x:auto}
+  table.r4{border-collapse:collapse;margin-top:4px}
+  table.r4 th,table.r4 td{padding:5px;text-align:center}
+  table.r4 th{font-family:Oswald;font-weight:600;font-size:12px;color:var(--muted)}
+  table.r4 th.corner{color:var(--faint);font-size:10px;font-weight:500}
+  table.r4 td input{width:52px;padding:7px 4px;font-size:14px}
+  .r4-legend{font-size:11.5px;color:var(--faint);margin-top:10px;line-height:1.4}
+  .r4-legend b{color:var(--muted)}
+
+  .savebtn{width:100%;font-family:Oswald;font-weight:600;font-size:14px;letter-spacing:.05em;text-transform:uppercase;
+    padding:14px;border-radius:12px;border:none;cursor:pointer;
+    background:linear-gradient(180deg,var(--gold),var(--gold-dim));color:#150f00;box-shadow:0 8px 20px -8px rgba(244,183,64,.6);transition:.2s}
+  .savebtn:disabled{opacity:.6;cursor:not-allowed;box-shadow:none}
+  .msg{margin-top:12px;font-size:13px;padding:11px 13px;border-radius:11px;display:none;line-height:1.4}
+  .msg.show{display:block}
+  .msg.ok{background:rgba(55,214,122,.12);border:1px solid rgba(55,214,122,.4);color:#a7edc6}
+  .msg.err{background:rgba(240,85,95,.12);border:1px solid rgba(240,85,95,.4);color:#ffb3b7}
+
+  .stub{text-align:center;color:var(--faint);padding:40px 16px;font-size:13.5px;line-height:1.5}
+  .center-note{max-width:520px;margin:60px auto;text-align:center;color:var(--muted);line-height:1.5}
+  .center-note a{color:var(--gold)}
+  /* bloque eliminatorias admin */
+  .arnd{margin-bottom:16px}
+  .arnd-h{display:flex;align-items:center;justify-content:space-between;margin:2px 0 8px}
+  .arnd-h span{font-family:Oswald;font-weight:600;font-size:13px;letter-spacing:.06em;text-transform:uppercase;color:var(--po)}
+  .mini-save{font-family:Oswald;font-weight:600;font-size:11px;letter-spacing:.04em;text-transform:uppercase;
+    padding:6px 12px;border-radius:9px;border:1px solid var(--line2);background:rgba(255,255,255,.05);color:var(--text);cursor:pointer}
+  .mini-save:hover{border-color:var(--gold);color:var(--gold)}
+  .mini-save:disabled{opacity:.6;cursor:wait}
+  .amatch{background:var(--bg);border:1px solid var(--line);border-radius:11px;padding:6px 10px;margin-bottom:7px}
+  .aside{display:flex;align-items:center;gap:8px;padding:6px 0}
+  .aside+.aside{border-top:1px solid var(--line)}
+  .aside select.ateam{flex:1;min-width:0}
+  .aside .ascore{width:52px;text-align:center}
+  .acrest-wrap{flex:0 0 auto;display:inline-flex}
+  .acrest{width:26px;height:26px;border-radius:7px;flex:0 0 auto;display:flex;align-items:center;justify-content:center;
+    overflow:hidden;font-family:Oswald;font-weight:700;font-size:11px;color:#0a0e1c;background:#222a44}
+  .acrest.logo{background:#fff;padding:2px}
+  .acrest.logo img{width:100%;height:100%;object-fit:contain;display:block}
+  .acrest.empty{color:var(--faint);background:#222a44}
+  .afixed{flex:1;min-width:0;font-size:14px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;padding:9px 0}
+  .afixed.tbd{color:var(--faint);font-weight:500;font-style:italic}
+  /* grupos (drag) + playoff (selección) admin */
+  .glist{display:flex;flex-direction:column;gap:5px}
+  .grow{display:flex;align-items:center;gap:10px;background:var(--bg);border:1px solid var(--line);border-radius:10px;
+    padding:7px 10px 7px 9px;position:relative;overflow:hidden;touch-action:pan-y}
+  .grow::before{content:"";position:absolute;left:0;top:0;bottom:0;width:4px;background:var(--faint)}
+  .grow.t-dir::before{background:var(--ok)} .grow.t-po::before{background:var(--po)} .grow.t-out::before{background:var(--err)}
+  .gpos{font-family:Oswald;font-weight:600;font-size:17px;width:26px;text-align:center;flex:0 0 auto;font-variant-numeric:tabular-nums}
+  .t-dir .gpos{color:var(--ok)} .t-po .gpos{color:var(--po)} .t-out .gpos{color:var(--err)}
+  .gname{font-weight:600;font-size:14px;flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .gtag{font-family:Oswald;font-size:9px;font-weight:600;letter-spacing:.06em;padding:3px 7px;border-radius:6px;flex:0 0 auto;text-transform:uppercase}
+  .t-dir .gtag{background:rgba(55,214,122,.14);color:var(--ok)}
+  .t-po .gtag{background:rgba(255,159,67,.14);color:var(--po)}
+  .t-out .gtag{background:rgba(240,85,95,.14);color:var(--err)}
+  .ggrip{color:var(--faint);font-size:15px;cursor:grab;letter-spacing:-2px;padding:6px 3px;flex:0 0 auto;touch-action:none;margin-left:2px}
+  .gdiv{display:flex;align-items:center;gap:8px;padding:7px 3px 3px;user-select:none;font-family:Oswald;font-weight:600;font-size:9.5px;letter-spacing:.12em;text-transform:uppercase}
+  .gdiv .ln{flex:1;height:1px}
+  .gdiv.d1{color:var(--ok)} .gdiv.d1 .ln{background:linear-gradient(90deg,var(--ok),transparent)}
+  .gdiv.d2{color:var(--err)} .gdiv.d2 .ln{background:linear-gradient(90deg,var(--err),transparent)}
+  .sortable-ghost{opacity:.35}
+  .porow{display:flex;align-items:center;gap:10px;background:var(--bg);border:1px solid var(--line);border-radius:10px;
+    padding:7px 10px;cursor:pointer;position:relative;overflow:hidden;transition:.15s}
+  .porow::before{content:"";position:absolute;left:0;top:0;bottom:0;width:4px;background:var(--po)}
+  .porow.pick{background:linear-gradient(90deg,rgba(244,183,64,.14),var(--bg));border-color:rgba(244,183,64,.4)}
+  .porow.pick::before{background:var(--gold)}
+  .pocheck{margin-left:auto;width:22px;height:22px;border-radius:50%;flex:0 0 auto;border:1.5px solid var(--line2);
+    display:flex;align-items:center;justify-content:center;font-size:12px;color:transparent}
+  .porow.pick .pocheck{background:var(--gold);border-color:var(--gold);color:#150f00}
+  .pocount{font-size:12px;color:var(--muted);margin:2px 2px 10px}
+  .pocount b{font-family:Oswald;color:var(--gold)}
+  .gana{display:none;align-items:center;gap:7px;flex-wrap:wrap;padding:8px 0 3px;margin-top:3px;border-top:1px dashed var(--line);font-size:11.5px;color:var(--muted)}
+  .gana button{font-family:Inter;font-size:11.5px;font-weight:600;padding:4px 11px;border-radius:8px;border:1px solid var(--line2);background:rgba(255,255,255,.05);color:var(--text);cursor:pointer}
+  .gana button.on{background:var(--gold);color:#150f00;border-color:var(--gold)}
+</style>
+</head>
+<body>
+<div class="wrap" id="wrap" style="display:none">
+  <header>
+    <svg class="starball" viewBox="0 0 40 40" fill="none">
+      <circle cx="20" cy="20" r="18" fill="#0e1530" stroke="#2a355f"/>
+      <path d="M20 7l2.6 5.3 5.9.9-4.3 4.1 1 5.8L20 26l-5.2 2.7 1-5.8-4.3-4.1 5.9-.9z" fill="#f4b740"/>
+    </svg>
+    <div class="htitle">Porra <b>Champions</b> <span class="badge">Admin</span></div>
+    <button class="userchip" id="userChip"><span class="un" id="uName"></span><span class="out">Salir</span></button>
+  </header>
+
+  <div class="tabs">
+    <button data-tab="0" class="on">Ventanas y reglas</button>
+    <button data-tab="1">Resultados</button>
+    <button data-tab="2">Verificación</button>
+  </div>
+
+  <!-- ===== TAB 0: Ventanas + reglas ===== -->
+  <section class="panel on" id="p0">
+    <div class="card">
+      <h2>Ventanas de apuesta</h2>
+      <p class="desc">Controla qué fases pueden editar los jugadores.</p>
+      <div class="row">
+        <label>Ventana A · Grupos + Playoff <small>Abierta = los jugadores pueden pronosticar</small></label>
+        <select id="ventGP"><option value="abierta">Abierta</option><option value="cerrada">Cerrada</option></select>
+      </div>
+      <div class="row">
+        <label>Ventana B · Eliminatorias <small>Abrir tras cargar el cuadro real del sorteo</small></label>
+        <select id="ventElim"><option value="pendiente">Pendiente</option><option value="abierta">Abierta</option><option value="cerrada">Cerrada</option></select>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>Puntos por regla</h2>
+      <div class="row"><label>Grupos · acertar rango <small>1–8 / 9–24 / 25–36</small></label><input type="number" id="r_grupos_rango"></div>
+      <div class="row"><label>Grupos · puesto exacto</label><input type="number" id="r_grupos_puesto"></div>
+      <div class="row"><label>Playoff · por equipo que pasa</label><input type="number" id="r_playoff_equipo"></div>
+      <div class="row"><label>Eliminatorias · ganador (90′)</label><input type="number" id="r_elim_ganador"></div>
+      <div class="row"><label>Eliminatorias · emparejamiento <small>cuartos, semis, final</small></label><input type="number" id="r_elim_emparejamiento"></div>
+      <div class="row"><label>Eliminatorias · resultado exacto</label><input type="number" id="r_elim_exacto"></div>
+    </div>
+
+    <div class="card">
+      <h2>Bonus posición final (matriz R4)</h2>
+      <p class="desc">Filas = previsión del jugador · Columnas = resultado real. Tiers: 1, 2, S(emis), C(uartos), O(ctavos).</p>
+      <div class="matrix">
+        <table class="r4" id="r4tbl"></table>
+      </div>
+      <div class="r4-legend"><b>Recordatorio:</b> la diagonal (acierto exacto) es el máximo; se anula al fallar por 2+ escalones.</div>
+    </div>
+
+    <button class="savebtn" id="saveTab0">Guardar ventanas y reglas</button>
+    <div class="msg" id="msg0"></div>
+  </section>
+
+  <!-- ===== TAB 1: Resultados ===== -->
+  <section class="panel" id="p1">
+    <div class="card">
+      <h2>Eliminatorias · cuadro real</h2>
+      <p class="desc">Elige los equipos de octavos tal como salgan del sorteo y ve metiendo resultados (a 90′). Cuartos en adelante se proponen solos con los ganadores; ajusta y guarda ronda a ronda. Guardar no borra nada: actualiza solo las casillas de esa ronda.</p>
+      <div id="admBracket">Cargando…</div>
+      <div class="msg" id="msgR"></div>
+    </div>
+    <div class="card">
+      <h2>Grupos · clasificación real</h2>
+      <p class="desc">Ordena los 36 según la clasificación final real. Verde 1–8 (directos), naranja 9–24 (playoff), rojo 25–36 (fuera).</p>
+      <div class="glist" id="admGrupos">Cargando…</div>
+      <button class="savebtn" id="saveGrupos" style="margin-top:12px">Guardar clasificación</button>
+      <div class="msg" id="msgG"></div>
+    </div>
+    <div class="card">
+      <h2>Playoff · los 8 que pasan</h2>
+      <p class="desc">De los puestos 9–24 reales, marca los 8 que realmente se clasificaron a octavos.</p>
+      <div class="pocount">Seleccionados <b id="poCount">0 / 8</b></div>
+      <div class="glist" id="admPlayoff">Ordena antes la clasificación real.</div>
+      <button class="savebtn" id="savePlayoff" style="margin-top:12px">Guardar playoff</button>
+      <div class="msg" id="msgP"></div>
+    </div>
+  </section>
+
+  <!-- ===== TAB 2: Verificación (esqueleto) ===== -->
+  <section class="panel" id="p2">
+    <div class="card"><h2>Verificación del cuadro</h2>
+      <div class="stub">Próximo paso.<br>Dibujo del árbol completo desde <code>feeds_*</code> para contrastarlo con el cuadro oficial
+      de la UEFA <b>antes</b> de abrir apuestas, y la profundidad R4 (1/2/S/C/O) derivada de cada equipo.</div>
+    </div>
+  </section>
+</div>
+
+<div class="center-note" id="gate">Comprobando acceso…</div>
+
+<script type="module">
+  import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
+  const SUPABASE_URL = 'https://vucyzvyohltyontitcfr.supabase.co'
+  const SUPABASE_KEY = 'sb_publishable_i_RtEH-_kVhcJcoTsyVfkA_xxWrkmzd'
+  const sb = createClient(SUPABASE_URL, SUPABASE_KEY)
+
+  const TIERS = ['1','2','S','C','O']
+  const $ = id => document.getElementById(id)
+
+  // ---- Guardián de admin ----
+  const { data:{ session } } = await sb.auth.getSession()
+  if(!session){ location.replace('login.html'); }
+  else {
+    const { data: prof } = await sb.from('profiles').select('nombre,es_admin').eq('id', session.user.id).single()
+    if(!prof || !prof.es_admin){
+      $('gate').innerHTML = 'No tienes permisos de administrador.<br><a href="porra-champions.html">Volver a la porra</a>'
+    } else {
+      $('uName').textContent = prof.nombre || ''
+      $('gate').style.display = 'none'
+      $('wrap').style.display = 'block'
+      initTabs(); await cargarConfig()
+    }
+  }
+  $('userChip').onclick = async () => { await sb.auth.signOut(); location.replace('login.html') }
+
+  function initTabs(){
+    document.querySelectorAll('.tabs button').forEach(b=>b.onclick=()=>{
+      const t=b.dataset.tab
+      document.querySelectorAll('.tabs button').forEach(x=>x.classList.toggle('on', x===b))
+      document.querySelectorAll('.panel').forEach((p,i)=>p.classList.toggle('on', String(i)===t))
+      if(t==='1' && !resLoaded){ resLoaded=true; loadResultados() }
+    })
+    // construir matriz R4
+    const tbl=$('r4tbl')
+    let head='<tr><th class="corner">prev \\ real</th>'+TIERS.map(t=>`<th>${t}</th>`).join('')+'</tr>'
+    let body=TIERS.map(rp=>`<tr><th>${rp}</th>`+TIERS.map(rr=>`<td><input type="number" data-p="${rp}" data-r="${rr}"></td>`).join('')+'</tr>').join('')
+    tbl.innerHTML=head+body
+  }
+
+  async function cargarConfig(){
+    const [{ data:ct }, { data:cr }] = await Promise.all([
+      sb.from('config_torneo').select('ventana_gp,ventana_elim').eq('id',1).single(),
+      sb.from('config_reglas').select('*').eq('id',1).single()
+    ])
+    if(ct){ $('ventGP').value=ct.ventana_gp; $('ventElim').value=ct.ventana_elim }
+    if(cr){
+      $('r_grupos_rango').value=cr.grupos_rango
+      $('r_grupos_puesto').value=cr.grupos_puesto
+      $('r_playoff_equipo').value=cr.playoff_equipo
+      $('r_elim_ganador').value=cr.elim_ganador
+      $('r_elim_emparejamiento').value=cr.elim_emparejamiento
+      $('r_elim_exacto').value=cr.elim_exacto
+      const m=cr.r4_matrix||{}
+      document.querySelectorAll('#r4tbl input').forEach(inp=>{
+        const v=(m[inp.dataset.p]||{})[inp.dataset.r]; inp.value = (v==null?0:v)
+      })
+    }
+  }
+
+  function setMsg(t,kind){ const m=$('msg0'); m.textContent=t; m.className='msg show '+kind }
+
+  $('saveTab0').onclick = async () => {
+    const btn=$('saveTab0'); btn.disabled=true; const txt=btn.textContent; btn.textContent='Guardando…'
+    try{
+      const r4={}; TIERS.forEach(p=>{ r4[p]={}; TIERS.forEach(r=>{ r4[p][r]=0 }) })
+      document.querySelectorAll('#r4tbl input').forEach(inp=>{ r4[inp.dataset.p][inp.dataset.r]=Number(inp.value)||0 })
+
+      let res
+      res = await sb.from('config_torneo').update({
+        ventana_gp: $('ventGP').value, ventana_elim: $('ventElim').value, updated_at: new Date().toISOString()
+      }).eq('id',1)
+      if(res.error) throw res.error
+      res = await sb.from('config_reglas').update({
+        grupos_rango:        Number($('r_grupos_rango').value)||0,
+        grupos_puesto:       Number($('r_grupos_puesto').value)||0,
+        playoff_equipo:      Number($('r_playoff_equipo').value)||0,
+        elim_ganador:        Number($('r_elim_ganador').value)||0,
+        elim_emparejamiento: Number($('r_elim_emparejamiento').value)||0,
+        elim_exacto:         Number($('r_elim_exacto').value)||0,
+        r4_matrix: r4
+      }).eq('id',1)
+      if(res.error) throw res.error
+      setMsg('Guardado ✓','ok')
+    }catch(e){ console.error(e); setMsg('Error al guardar: '+(e.message||e),'err') }
+    finally{ btn.disabled=false; btn.textContent=txt }
+  }
+  /* ===== TAB Resultados · Eliminatorias ===== */
+  let resLoaded=false, equipos=[], cruces={}, parents={}, ganaSel={}, colorById={}, nombreById={}
+  let ordenReal=[], advanceReal=[], gSortable=null
+  const RONDAS=[['R16','Octavos'],['QF','Cuartos'],['SF','Semifinales'],['F','Final']]
+  const abbr = n => (n||'').replace(/[^A-Za-zÀ-ÿ0-9 ]/g,'').split(' ').map(w=>w[0]).join('').slice(0,3).toUpperCase()
+  function crestHTML(id){
+    if(!id) return `<span class="acrest empty">?</span>`
+    return `<span class="acrest logo"><img src="escudos/${id}.svg" alt="" onerror="this.parentNode.classList.remove('logo');this.parentNode.style.background='${colorById[id]||'#334'}';this.parentNode.textContent='${abbr(nombreById[id])}'"></span>`
+  }
+
+  async function loadResultados(){
+    const [{ data:eq }, { data:cr }, { data:rl }, { data:rp }] = await Promise.all([
+      sb.from('equipos').select('id,nombre,color').eq('activo',true).order('nombre'),
+      sb.from('bracket_cruces').select('*').order('idx'),
+      sb.from('resultado_liga').select('equipo_id,puesto'),
+      sb.from('resultado_playoff').select('equipo_id')
+    ])
+    equipos = eq||[]
+    colorById = Object.fromEntries(equipos.map(e=>[e.id, e.color||'#334']))
+    nombreById = Object.fromEntries(equipos.map(e=>[e.id, e.nombre]))
+    cruces = {}; (cr||[]).forEach(m=>cruces[m.id]=m)
+    parents = {}
+    Object.values(cruces).forEach(m=>{ if(m.feeds_id){ (parents[m.feeds_id]=parents[m.feeds_id]||{})[m.feeds_pos]=m.id } })
+    ganaSel = {}
+    Object.values(cruces).forEach(m=>{ if(m.ganador_id){ ganaSel[m.id] = (m.ganador_id===m.equipo_local)?'local':(m.ganador_id===m.equipo_visitante)?'visitante':null } })
+    // clasificación real (orden por puesto si existe; si no, alfabético como arranque)
+    if(rl && rl.length===36){
+      const byPos=new Array(36); rl.forEach(r=>{ if(r.puesto>=1&&r.puesto<=36) byPos[r.puesto-1]=r.equipo_id })
+      ordenReal = byPos.every(Boolean) ? byPos : equipos.map(e=>e.id)
+    } else { ordenReal = equipos.map(e=>e.id) }
+    advanceReal = (rp||[]).map(r=>r.equipo_id)
+    renderBracket(); renderGrupos(); renderPlayoff()
+  }
+
+  function winnerOf(id){
+    const m=cruces[id]; if(!m) return null
+    if(m.equipo_local==null||m.equipo_visitante==null) return null
+    if(m.goles_local==null||m.goles_visitante==null) return null
+    if(m.goles_local>m.goles_visitante) return m.equipo_local
+    if(m.goles_visitante>m.goles_local) return m.equipo_visitante
+    return m.ganador_id || null
+  }
+  function proposed(slotId, side){ const p=parents[slotId]; return (p&&p[side])?winnerOf(p[side]):null }
+  function dispTeam(m, side){ const v = side==='local'?m.equipo_local:m.equipo_visitante; return v!=null?v:proposed(m.id,side) }
+  function optsWith(val){ return '<option value="">—</option>' + equipos.map(e=>`<option value="${e.id}" ${e.id===val?'selected':''}>${e.nombre}</option>`).join('') }
+  function scoreVal(slot,side){ const i=document.querySelector(`.ascore[data-slot="${slot}"][data-side="${side}"]`); return i?i.value:'' }
+  function teamVal(slot,side){
+    const s=document.querySelector(`.ateam[data-slot="${slot}"][data-side="${side}"]`)
+    if(s) return s.value
+    const f=document.querySelector(`.afixed[data-slot="${slot}"][data-side="${side}"]`)
+    return f ? (f.dataset.fixed||'') : ''
+  }
+
+  function candidatos(slotId, side){
+    // Los 2 equipos del cruce anterior que alimenta esta casilla (posibles ganadores)
+    const p = parents[slotId]
+    if(!p || !p[side]) return []
+    const src = cruces[p[side]]
+    if(!src) return []
+    return [src.equipo_local, src.equipo_visitante].filter(Boolean)
+  }
+  function matchRow(m){
+    const esOctavos = m.ronda === 'R16'
+    const crestWrap = (side,val)=>`<span class="acrest-wrap" data-slot="${m.id}" data-side="${side}">${crestHTML(val)}</span>`
+    const teamCtrl = (side)=>{
+      if(esOctavos){
+        // Octavos: los 36 (el sorteo). Valor = lo que haya en BD.
+        const val = side==='local'?m.equipo_local:m.equipo_visitante
+        return crestWrap(side,val)+`<select class="ateam" data-slot="${m.id}" data-side="${side}">${optsWith(val)}</select>`
+      }
+      // Cuartos+: 2 candidatos del cruce anterior, preseleccionado el GANADOR actual (propuesta)
+      const win = proposed(m.id, side)
+      const cand = candidatos(m.id, side)
+      if(cand.length === 0){
+        return crestWrap(side,null)+`<span class="afixed tbd" data-slot="${m.id}" data-side="${side}" data-fixed="">Por definir</span>`
+      }
+      const opts = '<option value="">—</option>' + cand.map(id=>`<option value="${id}" ${id===win?'selected':''}>${nombreById[id]||id}</option>`).join('')
+      return crestWrap(side,win)+`<select class="ateam" data-slot="${m.id}" data-side="${side}">${opts}</select>`
+    }
+    const sc =(side,val)=>`<input class="ascore" data-slot="${m.id}" data-side="${side}" inputmode="numeric" maxlength="2" value="${val==null?'':val}">`
+    return `<div class="amatch" data-slot="${m.id}">
+      <div class="aside">${teamCtrl('local')}${sc('local',m.goles_local)}</div>
+      <div class="aside">${teamCtrl('visitante')}${sc('visitante',m.goles_visitante)}</div>
+      <div class="gana" data-slot="${m.id}"><span>Empate a 90′ · ¿quién pasa?</span>
+        <button data-slot="${m.id}" data-side="local">Local</button>
+        <button data-slot="${m.id}" data-side="visitante">Visitante</button></div>
+    </div>`
+  }
+
+  function renderBracket(){
+    const cont=$('admBracket')
+    cont.innerHTML = RONDAS.map(([r,lbl])=>{
+      const slots=Object.values(cruces).filter(m=>m.ronda===r).sort((a,b)=>a.idx-b.idx)
+      return `<div class="arnd">
+        <div class="arnd-h"><span>${lbl}</span><button class="mini-save" data-round="${r}">Guardar ${lbl.toLowerCase()}</button></div>
+        ${slots.map(matchRow).join('')}</div>`
+    }).join('')
+    cont.querySelectorAll('.ateam').forEach(s=>s.onchange=()=>{
+      const w=document.querySelector(`.acrest-wrap[data-slot="${s.dataset.slot}"][data-side="${s.dataset.side}"]`)
+      if(w) w.innerHTML=crestHTML(s.value)
+    })
+    cont.querySelectorAll('.ascore').forEach(inp=>inp.oninput=()=>{ inp.value=inp.value.replace(/[^0-9]/g,'').slice(0,2); refreshGana(inp.dataset.slot) })
+    cont.querySelectorAll('.gana button').forEach(b=>b.onclick=()=>{ ganaSel[b.dataset.slot]=b.dataset.side; refreshGana(b.dataset.slot) })
+    cont.querySelectorAll('[data-round]').forEach(b=>b.onclick=()=>saveRound(b.dataset.round))
+    Object.values(cruces).forEach(m=>refreshGana(m.id))
+  }
+
+  function refreshGana(slot){
+    const wrap=document.querySelector(`.gana[data-slot="${slot}"]`); if(!wrap) return
+    const gl=scoreVal(slot,'local'), gv=scoreVal(slot,'visitante')
+    const tie = gl!=='' && gv!=='' && Number(gl)===Number(gv)
+    wrap.style.display = tie?'flex':'none'
+    wrap.querySelectorAll('button').forEach(b=>b.classList.toggle('on', ganaSel[slot]===b.dataset.side))
+  }
+
+  function setMsgR(t,kind){ const m=$('msgR'); m.textContent=t; m.className='msg show '+kind }
+
+  /* ----- Grupos (clasificación real) ----- */
+  const tierG = pos => pos<=8?'t-dir':pos<=24?'t-po':'t-out'
+  const tagG  = pos => pos<=8?'Directo':pos<=24?'Playoff':'Fuera'
+  function renderGrupos(){
+    const cont=$('admGrupos')
+    cont.innerHTML = ordenReal.map((id,i)=>{
+      const pos=i+1
+      return `<div class="grow ${tierG(pos)}" data-team="${id}"><div class="gpos">${pos}</div>${crestHTML(id)}<div class="gname">${nombreById[id]||id}</div><div class="gtag">${tagG(pos)}</div><div class="ggrip">⋮⋮</div></div>`
+    }).join('')
+    insertDivs(cont)
+    if(!gSortable){
+      gSortable = Sortable.create(cont,{animation:150,handle:'.ggrip',filter:'.gdiv',ghostClass:'sortable-ghost',
+        forceFallback:true,fallbackTolerance:4,delayOnTouchOnly:true,delay:60, onEnd:relayoutGrupos})
+    }
+  }
+  function insertDivs(cont){
+    const rows=[...cont.querySelectorAll('.grow')]
+    let d1=cont.querySelector('.gdiv.d1'), d2=cont.querySelector('.gdiv.d2')
+    if(!d1){ d1=document.createElement('div'); d1.className='gdiv d1'; d1.innerHTML='<span>Directos ↑ · Playoff ↓</span><div class="ln"></div>' }
+    if(!d2){ d2=document.createElement('div'); d2.className='gdiv d2'; d2.innerHTML='<span>Playoff ↑ · Fuera ↓</span><div class="ln"></div>' }
+    if(rows[8]) cont.insertBefore(d1, rows[8]); if(rows[24]) cont.insertBefore(d2, rows[24])
+  }
+  function relayoutGrupos(){
+    const cont=$('admGrupos')
+    const rows=[...cont.querySelectorAll('.grow')]
+    ordenReal = rows.map(r=>r.dataset.team)
+    rows.forEach((r,i)=>{ const pos=i+1
+      r.querySelector('.gpos').textContent=pos
+      r.querySelector('.gtag').textContent=tagG(pos)
+      r.classList.remove('t-dir','t-po','t-out'); r.classList.add(tierG(pos))
+    })
+    insertDivs(cont)
+    renderPlayoff()   // el pool 9-24 puede haber cambiado
+  }
+
+  /* ----- Playoff real (8 que pasan) ----- */
+  function renderPlayoff(){
+    const cont=$('admPlayoff')
+    const pool = ordenReal.slice(8,24)
+    advanceReal = advanceReal.filter(id=>pool.includes(id))
+    cont.innerHTML = pool.map((id,i)=>{
+      const picked=advanceReal.includes(id)
+      return `<div class="porow ${picked?'pick':''}" data-team="${id}"><div class="gpos" style="color:var(--po)">${i+9}</div>${crestHTML(id)}<div class="gname">${nombreById[id]||id}</div><div class="pocheck">✓</div></div>`
+    }).join('')
+    cont.querySelectorAll('.porow').forEach(row=>row.onclick=()=>{
+      const id=row.dataset.team
+      if(advanceReal.includes(id)) advanceReal=advanceReal.filter(x=>x!==id)
+      else { if(advanceReal.length>=8) return; advanceReal.push(id) }
+      renderPlayoff()
+    })
+    $('poCount').textContent = `${advanceReal.length} / 8`
+  }
+
+  function setMsgG(t,k){ const m=$('msgG'); m.textContent=t; m.className='msg show '+k }
+  function setMsgP(t,k){ const m=$('msgP'); m.textContent=t; m.className='msg show '+k }
+
+  async function saveGrupos(){
+    const btn=$('saveGrupos'); btn.disabled=true; const t=btn.textContent; btn.textContent='Guardando…'
+    try{
+      if(ordenReal.length!==36) throw new Error('Faltan equipos por ordenar.')
+      const filas=ordenReal.map((id,i)=>({equipo_id:id, puesto:i+1}))
+      let r=await sb.from('resultado_liga').delete().gte('puesto',1); if(r.error) throw r.error
+      r=await sb.from('resultado_liga').insert(filas).select('equipo_id'); if(r.error) throw r.error
+      if(!r.data || r.data.length===0) throw new Error('No se guardó nada (¿RLS/admin?).')
+      setMsgG('Clasificación guardada ✓','ok')
+    }catch(e){ console.error(e); setMsgG('Error: '+(e.message||e),'err') }
+    finally{ btn.disabled=false; btn.textContent=t }
+  }
+  async function savePlayoff(){
+    const btn=$('savePlayoff'); btn.disabled=true; const t=btn.textContent; btn.textContent='Guardando…'
+    try{
+      const pool=ordenReal.slice(8,24)
+      if(advanceReal.length>8) throw new Error('No puede haber más de 8.')
+      if(!advanceReal.every(id=>pool.includes(id))) throw new Error('Algún elegido no está en 9–24.')
+      const filas=advanceReal.map(id=>({equipo_id:id}))
+      let r=await sb.from('resultado_playoff').delete().neq('equipo_id',''); if(r.error) throw r.error
+      if(filas.length){
+        r=await sb.from('resultado_playoff').insert(filas).select('equipo_id'); if(r.error) throw r.error
+        if(!r.data || r.data.length===0) throw new Error('No se guardó nada (¿RLS/admin?).')
+      }
+      setMsgP(`Playoff guardado ✓ (${advanceReal.length}/8)`,'ok')
+    }catch(e){ console.error(e); setMsgP('Error: '+(e.message||e),'err') }
+    finally{ btn.disabled=false; btn.textContent=t }
+  }
+  $('saveGrupos').onclick = saveGrupos
+  $('savePlayoff').onclick = savePlayoff
+
+  async function saveRound(r){
+    const btn=document.querySelector(`[data-round="${r}"]`); if(btn){ btn.disabled=true; btn.textContent='Guardando…' }
+    try{
+      const slots=Object.values(cruces).filter(m=>m.ronda===r).sort((a,b)=>a.idx-b.idx)
+      for(const m of slots){
+        const gl=scoreVal(m.id,'local'), gv=scoreVal(m.id,'visitante')
+        if(gl!==''&&gv!==''&&Number(gl)===Number(gv) && !ganaSel[m.id]) throw new Error(`Empate en ${m.id} sin elegir quién pasa.`)
+      }
+      let tocadas=0
+      for(const m of slots){
+        const lv=teamVal(m.id,'local')||null, vv=teamVal(m.id,'visitante')||null
+        const gl=scoreVal(m.id,'local'), gv=scoreVal(m.id,'visitante')
+        const glN=gl===''?null:Number(gl), gvN=gv===''?null:Number(gv)
+        let gan=null
+        if(glN!=null&&gvN!=null&&glN===gvN){ gan = ganaSel[m.id]==='local'?lv:vv }
+        const { data, error } = await sb.from('bracket_cruces').update({
+          equipo_local:lv, equipo_visitante:vv, goles_local:glN, goles_visitante:gvN, ganador_id:gan
+        }).eq('id', m.id).select('id')
+        if(error) throw error
+        tocadas += (data ? data.length : 0)
+      }
+      if(tocadas===0) throw new Error('No se actualizó ninguna fila. ¿Eres admin y ejecutaste admin_policies.sql? (RLS)')
+      await loadResultados()   // recarga para reproponer la ronda siguiente
+      setMsgR(`Ronda "${r}" guardada ✓ (${tocadas} cruces)`,'ok')
+    }catch(e){ console.error(e); setMsgR('Error: '+(e.message||e),'err') }
+  }
+</script>
+</body>
+</html>
