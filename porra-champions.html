@@ -46,10 +46,10 @@
   .userchip .un{font-family:Oswald;font-weight:600;font-size:12.5px;color:var(--text);max-width:120px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
   .userchip .out{font-size:10px;color:var(--faint);letter-spacing:.05em;text-transform:uppercase}
   .userchip:hover .out{color:var(--gold)}
-  .savebar{position:absolute;left:50%;transform:translateX(-50%);bottom:82px;z-index:7;display:none;
-    align-items:center;justify-content:center;gap:8px;font-family:Oswald;font-weight:600;font-size:13px;
-    letter-spacing:.04em;text-transform:uppercase;padding:12px 22px;border-radius:24px;border:none;cursor:pointer;
-    box-shadow:0 12px 28px -12px rgba(0,0,0,.75);transition:.2s;white-space:nowrap;max-width:calc(100% - 32px)}
+  .savebar{position:absolute;top:10px;right:12px;z-index:9;display:none;
+    align-items:center;justify-content:center;gap:6px;font-family:Oswald;font-weight:600;font-size:11.5px;
+    letter-spacing:.03em;text-transform:uppercase;padding:8px 14px;border-radius:20px;border:none;cursor:pointer;
+    box-shadow:0 8px 20px -10px rgba(0,0,0,.7);transition:.2s;white-space:nowrap;max-width:60%}
   .savebar.show{display:inline-flex}
   .savebar.dirty{background:linear-gradient(180deg,var(--gold),var(--gold-dim));color:#150f00}
   .savebar.saved{background:var(--panel2);color:var(--muted);border:1px solid var(--line2)}
@@ -123,9 +123,40 @@
   .t-po .tier-tag{background:rgba(255,159,67,.14);color:var(--po)}
   .t-out .tier-tag{background:rgba(240,85,95,.14);color:var(--out)}
   .sortable-ghost{opacity:.35} .sortable-chosen{cursor:grabbing}
-  .divider{display:flex;align-items:center;gap:9px;padding:9px 4px 5px;user-select:none}
-  .divider span{font-family:Oswald;font-weight:600;font-size:10px;letter-spacing:.13em;text-transform:uppercase;white-space:nowrap}
+  .divider{display:flex;align-items:center;gap:9px;padding:9px 4px 5px;user-select:none}  .divider span{font-family:Oswald;font-weight:600;font-size:10px;letter-spacing:.13em;text-transform:uppercase;white-space:nowrap}
   .divider .ln{flex:1;height:1px}
+  /* Cuadrícula de Grupos (arrastre entre bloques) */
+  .ggrid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
+  .gtile{position:relative;display:flex;flex-direction:column;align-items:center;gap:5px;padding:9px 4px 7px;
+    background:var(--panel);border:1px solid var(--line);border-radius:12px;cursor:grab;overflow:hidden}
+  .gtile:active{cursor:grabbing}
+  .gtile::before{content:"";position:absolute;left:0;right:0;top:0;height:3px;background:var(--faint);z-index:2}
+  .gtile.t-dir::before{background:var(--dir)} .gtile.t-po::before{background:var(--po)} .gtile.t-out::before{background:var(--out)}
+  /* número en la esquina superior */
+  .gpos{position:absolute;top:5px;left:6px;z-index:2;font-family:Oswald;font-weight:700;font-size:12px;line-height:1;
+    color:var(--faint);font-variant-numeric:tabular-nums}
+  .gtile.t-dir .gpos{color:var(--dir)} .gtile.t-po .gpos{color:var(--po)} .gtile.t-out .gpos{color:var(--out)}
+  .gtile .crest{width:40px;height:40px;font-size:15px;border-radius:11px;position:relative;z-index:1}
+  .gtile .gsig{font-family:Oswald;font-weight:600;font-size:10px;letter-spacing:.04em;color:var(--muted);text-transform:uppercase;position:relative;z-index:1}
+  /* arrastre: hueco de origen, casilla elegida y la que sigue al dedo */
+  .gt-ghost{opacity:.25}
+  .gt-chosen{opacity:1}
+  .gt-drag{box-shadow:0 14px 30px -8px rgba(0,0,0,.65);border-color:var(--gold)!important;opacity:1}
+  .gdiv{grid-column:1/-1;display:flex;align-items:center;gap:9px;padding:4px 2px 2px;user-select:none}
+  .gdiv span{font-family:Oswald;font-weight:600;font-size:9.5px;letter-spacing:.12em;text-transform:uppercase;white-space:nowrap}
+  .gdiv .ln{flex:1;height:1px}
+  .gdiv.d-dir span{color:var(--dir)} .gdiv.d-dir .ln{background:linear-gradient(90deg,var(--dir),transparent)}
+  .gdiv.d-out span{color:var(--out)} .gdiv.d-out .ln{background:linear-gradient(90deg,var(--out),transparent)}
+  /* fichas de playoff (mismo look que grupos) */
+  .gtile.sel{cursor:pointer}
+  .gtile.info{cursor:default}
+  .gtile.info::before{background:var(--dir)}
+  .gtile.pick{background:linear-gradient(180deg,rgba(244,183,64,.16),var(--panel));border-color:rgba(244,183,64,.55)}
+  .gtile.pick::before{background:var(--gold)}
+  .gtile.dim{opacity:.4}
+  .gtile .gchk{position:absolute;top:5px;right:6px;z-index:2;width:18px;height:18px;border-radius:50%;
+    border:1.5px solid var(--line2);display:flex;align-items:center;justify-content:center;font-size:11px;color:transparent}
+  .gtile.pick .gchk{background:var(--gold);border-color:var(--gold);color:#0a0e1c}
   .d-dir span{color:var(--dir)} .d-dir .ln{background:linear-gradient(90deg,var(--dir),transparent)}
   .d-out span{color:var(--out)} .d-out .ln{background:linear-gradient(90deg,var(--out),transparent)}
 
@@ -134,12 +165,12 @@
     border-radius:14px;padding:11px 12px;margin-bottom:14px}
   .qual-block .qh{display:flex;align-items:center;gap:7px;margin-bottom:9px}
   .qual-block .qh b{font-family:Oswald;font-size:13px;letter-spacing:.05em;text-transform:uppercase;color:var(--dir)}
-  .qgrid{display:grid;grid-template-columns:1fr 1fr;gap:6px}
+  .qgrid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
   .qcell{display:flex;align-items:center;gap:7px;font-size:12.5px;font-weight:600;background:rgba(255,255,255,.03);border-radius:8px;padding:6px 8px}
   .qcell .qp{font-family:Oswald;color:var(--dir);width:16px;flex:0 0 auto}
   .sel-counter{display:flex;align-items:center;gap:8px;font-size:12px;color:var(--muted);margin:2px 2px 12px}
   .sel-counter .pill{font-family:Oswald;font-weight:600;background:var(--panel2);border:1px solid var(--line2);border-radius:20px;padding:3px 11px;color:var(--gold)}
-  .po-list{display:flex;flex-direction:column;gap:6px}
+  .po-list{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
   .porow{display:flex;align-items:center;gap:10px;background:var(--panel);border:1px solid var(--line);border-radius:12px;
     padding:9px 12px;cursor:pointer;transition:.18s;position:relative;overflow:hidden}
   .porow::before{content:"";position:absolute;left:0;top:0;bottom:0;width:4px;background:var(--po)}
@@ -355,10 +386,9 @@
       </section>
 
     </div>
+    <button class="savebar" id="saveBar"></button>
     <div class="hint" id="hint">← desliza entre fases y rondas →</div>
   </div>
-
-  <button class="savebar" id="saveBar"></button>
 
   <nav class="tabbar" id="tabbar">
     <a class="tab" href="index.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11l9-7 9 7"/><path d="M5 10v10h14V10"/></svg><span>Home</span></a>
@@ -431,8 +461,9 @@ let TEAMS = [
   ["Milan","#c8202e"],["Chelsea","#1b4fbf"],["Mónaco","#c8102e"],["Celtic","#1a8a4c"]
 ];
 const abbr = n => n.replace(/[^A-Za-zÀ-ÿ0-9 ]/g,"").split(" ").map(w=>w[0]).join("").slice(0,3).toUpperCase();
+const sig = name => (state.sigla && state.sigla[name]) || abbr(name);
 const slugify = s => s.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'');
-const state = { order:[], color:{}, logo:{}, id:{}, nameBySlug:{}, advance:[], bracket:null, bracketReal:null, uid:null, ventanaGP:'abierta', ventanaElim:'pendiente', dirtyA:false, dirtyB:false };
+const state = { order:[], color:{}, logo:{}, id:{}, nameBySlug:{}, sigla:{}, advance:[], bracket:null, bracketReal:null, uid:null, ventanaGP:'abierta', ventanaElim:'pendiente', dirtyA:false, dirtyB:false };
 function loadTeams(teams){
   TEAMS = teams;
   state.order = TEAMS.map(t=>t[0]);
@@ -440,6 +471,7 @@ function loadTeams(teams){
   state.logo  = Object.fromEntries(TEAMS.filter(t=>t[2]).map(t=>[t[0],t[2]]));
   state.id    = Object.fromEntries(TEAMS.map(t=>[t[0], t[2] ? t[2].replace(/\.svg$/,'') : slugify(t[0])]));
   state.nameBySlug = Object.fromEntries(Object.entries(state.id).map(([n,s])=>[s,n]));
+  state.sigla = Object.fromEntries(TEAMS.map(t=>[t[0], t[3] || abbr(t[0])]));
 }
 loadTeams(TEAMS);   // arranque con los de reserva; boot() los sustituye por los de la BD
 const crest = name => {
@@ -494,10 +526,15 @@ function updateHdrMin(){
 
 /* swipe */
 const vp=document.getElementById('viewport');
-let sx=0,sy=0,sw=false;
-vp.addEventListener('touchstart',e=>{sx=e.touches[0].clientX;sy=e.touches[0].clientY;sw=true;},{passive:true});
+let sx=0,sy=0,sw=false, dragging=false;
+vp.addEventListener('touchstart',e=>{
+  sx=e.touches[0].clientX;sy=e.touches[0].clientY;
+  // si el gesto empieza sobre una casilla arrastrable, no es swipe de pantalla
+  sw = !e.target.closest('.gtile');
+},{passive:true});
 vp.addEventListener('touchend',e=>{
   if(!sw)return; sw=false;
+  if(dragging){ dragging=false; return; }   // por seguridad, nunca dejar la bandera pegada
   const dx=e.changedTouches[0].clientX-sx, dy=e.changedTouches[0].clientY-sy;
   if(Math.abs(dx)>55&&Math.abs(dx)>Math.abs(dy)*1.6) goTo(idx+(dx<0?1:-1));
 },{passive:true});
@@ -507,42 +544,46 @@ const groupList=document.getElementById('groupList');
 const tierOf=p=>p<=8?'t-dir':p<=24?'t-po':'t-out';
 const tierTag=p=>p<=8?'Directo':p<=24?'Playoff':'Fuera';
 function buildGroup(){
+  groupList.classList.add('ggrid');
   groupList.innerHTML=state.order.map(n=>`
-    <div class="trow" data-team="${n}"><div class="pos"></div>${crest(n)}
-      <div class="tname">${n}</div><div class="tier-tag"></div><div class="grip">⋮⋮</div></div>`).join('');
-  const dPO=document.createElement('div');dPO.className='divider d-dir';
+    <div class="gtile" data-team="${n}"><div class="gpos"></div>${crest(n)}
+      <div class="gsig">${sig(n)}</div></div>`).join('');
+  const dPO=document.createElement('div');dPO.className='gdiv d-dir';
   dPO.innerHTML='<span>Directos ↑ · Playoff ↓</span><div class="ln"></div>';
-  const dOUT=document.createElement('div');dOUT.className='divider d-out';
+  const dOUT=document.createElement('div');dOUT.className='gdiv d-out';
   dOUT.innerHTML='<span>Playoff ↑ · Eliminados ↓</span><div class="ln"></div>';
   function relayout(){
-    const rows=[...groupList.querySelectorAll('.trow')];
-    state.order=rows.map(r=>r.dataset.team);
-    rows.forEach((r,i)=>{const p=i+1;r.querySelector('.pos').textContent=p;
-      r.querySelector('.tier-tag').textContent=tierTag(p);
+    const tiles=[...groupList.querySelectorAll('.gtile')];
+    state.order=tiles.map(r=>r.dataset.team);
+    tiles.forEach((r,i)=>{const p=i+1;r.querySelector('.gpos').textContent=p;
       r.classList.remove('t-dir','t-po','t-out');r.classList.add(tierOf(p));});
-    if(rows[8])groupList.insertBefore(dPO,rows[8]);
-    if(rows[24])groupList.insertBefore(dOUT,rows[24]);
+    if(tiles[8])groupList.insertBefore(dPO,tiles[8]);
+    if(tiles[24])groupList.insertBefore(dOUT,tiles[24]);
   }
   relayout();
-  Sortable.create(groupList,{animation:160,handle:'.grip',filter:'.divider',ghostClass:'sortable-ghost',
-    forceFallback:true,fallbackTolerance:4,delayOnTouchOnly:true,delay:60,disabled:!editableA(),
-    onEnd:()=>{relayout();markDirtyA();}});
+  Sortable.create(groupList,{animation:0,filter:'.gdiv',draggable:'.gtile',
+    ghostClass:'gt-ghost',chosenClass:'gt-chosen',dragClass:'gt-drag',
+    delayOnTouchOnly:true,delay:120,touchStartThreshold:6,disabled:!editableA(),
+    onStart:()=>{dragging=true;},
+    onEnd:()=>{relayout();markDirtyA();dragging=false;}});
 }
 
 /* ---------- PLAYOFF ---------- */
 function renderPlayoff(){
   const qual=state.order.slice(0,8), pool=state.order.slice(8,24);
   state.advance=state.advance.filter(t=>pool.includes(t));
+  // Ya clasificados 1–8 (informativos)
   document.getElementById('qualGrid').innerHTML=qual.map((n,i)=>`
-    <div class="qcell"><span class="qp">${i+1}</span>${crest(n)}<span style="flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${n}</span></div>`).join('');
+    <div class="gtile info"><div class="gpos">${i+1}</div>${crest(n)}<div class="gsig">${sig(n)}</div></div>`).join('');
+  // Seleccionables 9–24
+  const full=state.advance.length>=8;
   const list=document.getElementById('poList');
   list.innerHTML=pool.map((n,i)=>{
     const p=state.advance.includes(n);
-    return `<div class="porow ${p?'pick':''}" data-team="${n}"><div class="pos" style="color:var(--po)">${i+9}</div>${crest(n)}<div class="tname">${n}</div><div class="check">✓</div></div>`;
+    const dim=full&&!p?' dim':'';
+    return `<div class="gtile sel${p?' pick':''}${dim}" data-team="${n}"><div class="gpos" style="color:var(--po)">${i+9}</div><div class="gchk">✓</div>${crest(n)}<div class="gsig">${sig(n)}</div></div>`;
   }).join('');
-  const full=state.advance.length>=8;
-  list.querySelectorAll('.porow').forEach(row=>{
-    if(full&&!row.classList.contains('pick'))row.classList.add('full');
+  list.querySelectorAll('.gtile.sel').forEach(row=>{
     row.addEventListener('click',()=>{
       if(!editableA()) return;
       const t=row.dataset.team;
@@ -718,7 +759,7 @@ function updateSaveBar(){
   saveBar.classList.remove('dirty','saved','locked','busy');
   const editable = onA ? editableA() : editableB();
   const dirty    = onA ? state.dirtyA : state.dirtyB;
-  if(!editable){ saveBar.classList.add('locked'); saveBar.textContent='🔒 Ventana cerrada · solo lectura'; saveBar.disabled=true; return; }
+  if(!editable){ saveBar.classList.add('locked'); saveBar.textContent='🔒 Solo lectura'; saveBar.disabled=true; return; }
   saveBar.disabled = !dirty;
   if(dirty){ saveBar.classList.add('dirty'); saveBar.textContent='Guardar cambios'; }
   else     { saveBar.classList.add('saved'); saveBar.textContent='Guardado ✓'; }
@@ -837,9 +878,9 @@ async function boot(){
   // equipos
   try{
     const { data, error } = await sb.from('equipos')
-      .select('id,nombre,color').eq('activo', true).order('nombre');
+      .select('id,nombre,color,sigla').eq('activo', true).order('nombre');
     if(error) throw error;
-    if(data && data.length) loadTeams(data.map(e=>[e.nombre, e.color||'#334', e.id + '.svg']));
+    if(data && data.length) loadTeams(data.map(e=>[e.nombre, e.color||'#334', e.id + '.svg', e.sigla]));
   }catch(e){ console.warn('Equipos de BD no disponibles; uso los de reserva.', e); }
 
   // ¿estado de las ventanas?
