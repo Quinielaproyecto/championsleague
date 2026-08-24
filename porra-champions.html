@@ -70,12 +70,18 @@
   .pchip.on .pn{color:var(--gold)} .pchip.on .pt{color:var(--text)}
   .pchip .bar{height:2px;border-radius:2px;margin-top:6px;background:rgba(255,255,255,.06)}
   .pchip.on .bar{background:var(--gold)}
+  .pchip .rsubs{display:flex;gap:2px;margin-top:4px}
+  .pchip .rsub{flex:1;font-family:Oswald;font-weight:600;font-size:10px;padding:2px 0;border-radius:5px;
+    background:rgba(255,255,255,.05);color:var(--faint);transition:.15s}
+  .pchip.on .rsub{color:var(--muted)}
+  .pchip .rsub.cur{background:var(--gold);color:#150f00}
+  .pchip .rsub.done{color:var(--dir)}
   /* colapsada al hacer scroll */
   .hdr-min header{padding-top:9px;padding-bottom:5px}
   .hdr-min .kicker{max-height:0;opacity:0}
   .hdr-min .title{font-size:17px}
   .hdr-min .starball{width:26px;height:26px}
-  .hdr-min .phase-strip{max-height:0;opacity:0;margin-top:0;pointer-events:none}
+  .hdr-min .phase-strip{margin-top:8px}
   /* con teclado abierto la cabecera se mantiene en modo mínimo (visible) */
 
   /* ---------- Slider ---------- */
@@ -229,6 +235,7 @@
   .tab{flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;padding:5px 2px;cursor:pointer;color:var(--faint);transition:.2s}
   .tab svg{width:21px;height:21px} .tab span{font-family:Oswald;font-size:10px;font-weight:500;letter-spacing:.04em;text-transform:uppercase}
   .tab.on{color:var(--gold)}
+  .tabbar a{text-decoration:none}
   .hint{position:absolute;bottom:100px;left:50%;transform:translateX(-50%);font-size:11px;color:var(--faint);display:flex;align-items:center;gap:6px;
     pointer-events:none;background:rgba(6,10,22,.7);padding:5px 12px;border-radius:20px;border:1px solid var(--line);animation:fade 5.5s forwards}
   @keyframes fade{0%,72%{opacity:1}100%{opacity:0}}
@@ -287,17 +294,16 @@
     <div class="phase-strip" id="phaseStrip">
       <div class="pchip on" data-go="0"><div class="pn">Fase 1</div><div class="pt">Grupos</div><div class="bar"></div></div>
       <div class="pchip" data-go="1"><div class="pn">Fase 2</div><div class="pt">Playoff</div><div class="bar"></div></div>
-      <div class="pchip" data-go="2"><div class="pn">Fase 3</div><div class="pt">Eliminatorias</div><div class="bar"></div></div>
+      <div class="pchip pchip-elim" data-go="2"><div class="pn">Fase 3</div>
+        <div class="rsubs">
+          <div class="rsub" data-goround="r16">O</div>
+          <div class="rsub" data-goround="qf">C</div>
+          <div class="rsub" data-goround="sf">S</div>
+          <div class="rsub" data-goround="fn">F</div>
+        </div></div>
       <div class="pchip" data-go="6"><div class="pn">Fase 4</div><div class="pt">Resumen</div><div class="bar"></div></div>
     </div>
   </header>
-
-  <div class="roundbar" id="roundBar">
-    <div class="rtab" data-goround="r16">Octavos</div>
-    <div class="rtab" data-goround="qf">Cuartos</div>
-    <div class="rtab" data-goround="sf">Semis</div>
-    <div class="rtab" data-goround="fn">Final</div>
-  </div>
 
   <div class="viewport" id="viewport">
     <div class="track" id="track">
@@ -355,10 +361,10 @@
   <button class="savebar" id="saveBar"></button>
 
   <nav class="tabbar" id="tabbar">
-    <div class="tab on" data-go="0"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 6h16M4 12h16M4 18h10"/></svg><span>Grupos</span></div>
-    <div class="tab" data-go="1"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M9 6l6 6-6 6"/><path d="M4 6l6 6-6 6" opacity=".4"/></svg><span>Playoff</span></div>
-    <div class="tab" data-go="2"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 5v5a2 2 0 002 2h5m0 0h5a2 2 0 002 2v5"/><circle cx="20" cy="12" r="1.4" fill="currentColor" stroke="none"/></svg><span>Bracket</span></div>
-    <div class="tab" data-go="6"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M8 3v4M16 3v4M6 5h12a2 2 0 012 2v11a2 2 0 01-2 2H6a2 2 0 01-2-2V7a2 2 0 012-2z"/><path d="M8 12h8M8 16h5"/></svg><span>Resumen</span></div>
+    <a class="tab" href="index.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11l9-7 9 7"/><path d="M5 10v10h14V10"/></svg><span>Home</span></a>
+    <a class="tab on" href="porra-champions.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="6" y="4" width="12" height="16" rx="2"/><path d="M9.5 4h5v2.5h-5z"/><path d="M9 11h6M9 15h4"/></svg><span>Mi pronóstico</span></a>
+    <a class="tab" href="resultados.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 4h10v4a5 5 0 01-10 0z"/><path d="M7 6H4v1.5a3 3 0 003 3M17 6h3v1.5a3 3 0 01-3 3"/><path d="M9.5 20h5M12 14v6"/></svg><span>Clasificación</span></a>
+    <a class="tab adminonly" href="admin.html" style="display:none"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M12 3v2M12 19v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M3 12h2M19 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg><span>Admin</span></a>
   </nav>
 
   <!-- Teclado marcador -->
@@ -458,7 +464,7 @@ function goTo(i){
   if(kb.open && !inBracket) closeKB();
   track.style.transform=`translateX(-${idx*(100/N)}%)`;
   const phase = idx===0?0:idx===1?1:idx===6?6:2;
-  document.querySelectorAll('.tab,.pchip').forEach(t=>t.classList.toggle('on',+t.dataset.go===phase));
+  document.querySelectorAll('.pchip').forEach(t=>t.classList.toggle('on',+t.dataset.go===phase));
   phone.classList.toggle('show-rb', inBracket);
   updateHdrMin();
   if(idx===1) renderPlayoff();
@@ -468,12 +474,15 @@ function goTo(i){
   updateSaveBar();
 }
 function updateRoundBar(){
-  document.querySelectorAll('#roundBar .rtab').forEach(t=>{
+  document.querySelectorAll('.pchip-elim .rsub').forEach(t=>{
     const k=t.dataset.goround;
     t.classList.toggle('cur', ROUND_IDX[k]===idx);
     t.classList.toggle('done', ROUND_IDX[k]!==idx && state.bracket && complete(k) && state.bracket[k].every(m=>m.a));
   });
 }
+document.querySelectorAll('.pchip-elim .rsub').forEach(t=>t.addEventListener('click',e=>{
+  e.stopPropagation(); if(kb.open)closeKB(); goTo(ROUND_IDX[t.dataset.goround]);
+}));
 document.querySelectorAll('[data-go]').forEach(el=>el.addEventListener('click',()=>goTo(+el.dataset.go)));
 
 /* header colapsable segun scroll */
@@ -585,7 +594,6 @@ function propagate(){const b=state.bracket;
   b.fn[0].a=winner(b.sf[0]);b.fn[0].b=winner(b.sf[1]);clean(b.fn[0]);}
 function clean(m){if(m.a==null||m.b==null){m.ga='';m.gb='';m.pen=null;}}
 
-document.querySelectorAll('#roundBar .rtab').forEach(t=>t.addEventListener('click',()=>{if(kb.open)closeKB();goTo(ROUND_IDX[t.dataset.goround]);}));
 function matchCard(m,key,i){
   const w=winner(m);
   const side=(nm,g,other)=>{
@@ -821,6 +829,10 @@ async function boot(){
   if(!session){ location.replace('login.html'); return; }        // guardián de sesión
   state.uid = session.user.id;
   showUser(session.user);
+  try{
+    const { data: prof } = await sb.from('profiles').select('es_admin').eq('id', session.user.id).single();
+    if(prof && prof.es_admin){ const el=document.querySelector('.tabbar .adminonly'); if(el) el.style.display='flex'; }
+  }catch(e){ /* sin admin */ }
 
   // equipos
   try{

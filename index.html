@@ -2,645 +2,222 @@
 <html lang="es">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>Porra Champions 26/27</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Porra Champions · Inicio</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@300;400;500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-<script src="https://cdnjs.cloudflare.com/ajax/libs/Sortable/1.15.2/Sortable.min.js"></script>
 <style>
   :root{
     --bg:#070b18; --bg2:#0b1024; --panel:#121a34; --panel2:#19224a;
     --line:rgba(255,255,255,.09); --line2:rgba(255,255,255,.16);
     --text:#eef1fb; --muted:#8890b4; --faint:#5a628a;
     --gold:#f4b740; --gold-dim:#b9871f; --cyan:#74e4ff;
-    --dir:#37d67a; --po:#ff9f43; --out:#f0555f;
-    --shadow:0 18px 40px -18px rgba(0,0,0,.8);
+    --dir:#37d67a; --po:#ff9f43; --err:#f0555f;
   }
   *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
-  html,body{margin:0;height:100%;background:#03050d;color:var(--text);
-    font-family:Inter,system-ui,sans-serif;overflow:hidden}
+  html,body{margin:0;min-height:100%;background:
+      radial-gradient(120% 45% at 50% -5%, rgba(116,228,255,.14), transparent 60%),
+      radial-gradient(90% 40% at 85% 0%, rgba(244,183,64,.10), transparent 55%),
+      linear-gradient(180deg,var(--bg2),var(--bg) 45%);
+    color:var(--text);font-family:Inter,system-ui,sans-serif}
+  body{min-height:100vh;padding:16px 14px 92px}
+  .wrap{max-width:520px;margin:0 auto}
 
-  .app{position:fixed;inset:0;display:flex;align-items:center;justify-content:center}
-  .phone{
-    position:relative;width:100%;max-width:430px;height:100%;max-height:932px;
-    background:
-      radial-gradient(120% 55% at 50% -8%, rgba(116,228,255,.16), transparent 60%),
-      radial-gradient(90% 40% at 80% 0%, rgba(244,183,64,.10), transparent 55%),
-      linear-gradient(180deg,var(--bg2),var(--bg) 40%);
-    display:flex;flex-direction:column;overflow:hidden;box-shadow:var(--shadow)}
-  @media(min-width:472px){.phone{border-radius:34px;border:1px solid var(--line);height:calc(100% - 32px)}}
+  header{display:flex;align-items:center;gap:10px;margin-bottom:14px}
+  .starball{width:26px;height:26px;flex:0 0 auto}
+  .htitle{font-family:Oswald;font-weight:700;font-size:17px;text-transform:uppercase;line-height:1}
+  .htitle b{color:var(--gold)}
+  .userchip{margin-left:auto;display:flex;flex-direction:column;align-items:flex-end;background:transparent;border:none;cursor:pointer;padding:2px 0}
+  .userchip .un{font-family:Oswald;font-weight:600;font-size:12.5px;color:var(--text)}
+  .userchip .out{font-size:10px;color:var(--faint);letter-spacing:.05em;text-transform:uppercase}
+  .userchip:hover .out{color:var(--gold)}
 
-  /* ---------- Header (colapsable) ---------- */
-  header{flex:0 0 auto;position:relative;z-index:6;padding:14px 18px 8px;
-    transition:padding .28s ease, max-height .28s ease, opacity .2s ease;max-height:200px;overflow:hidden}
-  .brand{display:flex;align-items:center;gap:11px}
-  .starball{width:32px;height:32px;flex:0 0 auto;transition:.28s}
-  .kicker{font-family:Oswald;font-weight:600;letter-spacing:.14em;font-size:10.5px;
-    color:var(--cyan);text-transform:uppercase;opacity:.85;transition:.28s;max-height:16px;overflow:hidden}
-  .title{font-family:Oswald;font-weight:700;font-size:22px;line-height:.95;
-    letter-spacing:.01em;text-transform:uppercase;transition:font-size .28s}
-  .title b{color:var(--gold)}
-  .phase-strip{display:flex;gap:6px;margin-top:12px;transition:max-height .28s ease,opacity .22s ease,margin-top .28s ease;max-height:60px}
-  .pchip{flex:1;text-align:center;padding:6px 4px 7px;border-radius:11px;
-    background:rgba(255,255,255,.03);border:1px solid var(--line);cursor:pointer;transition:.25s;min-width:0}
-  .pchip .pn{font-family:Oswald;font-weight:600;font-size:9.5px;letter-spacing:.1em;color:var(--faint);text-transform:uppercase}
-  .pchip .pt{font-size:10.5px;font-weight:600;color:var(--muted);margin-top:1px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-  .pchip.on{background:linear-gradient(180deg,var(--panel2),var(--panel));border-color:var(--line2)}
-  .pchip.on .pn{color:var(--gold)} .pchip.on .pt{color:var(--text)}
-  .pchip .bar{height:2px;border-radius:2px;margin-top:6px;background:rgba(255,255,255,.06)}
-  .pchip.on .bar{background:var(--gold)}
-  /* colapsada al hacer scroll */
-  .hdr-min header{padding-top:9px;padding-bottom:5px}
-  .hdr-min .kicker{max-height:0;opacity:0}
-  .hdr-min .title{font-size:17px}
-  .hdr-min .starball{width:26px;height:26px}
-  .hdr-min .phase-strip{max-height:0;opacity:0;margin-top:0;pointer-events:none}
-  /* con teclado abierto la cabecera se mantiene en modo mínimo (visible) */
+  .hero{background:radial-gradient(120% 100% at 50% 0%,rgba(244,183,64,.16),transparent 70%),var(--panel2);
+    border:1px solid rgba(244,183,64,.3);border-radius:18px;padding:18px;text-align:center;margin-bottom:14px}
+  .hero .hi{font-size:13px;color:var(--muted)}
+  .hero .hi b{color:var(--text)}
+  .hero .tot{font-family:Oswald;font-weight:700;font-size:46px;color:var(--gold);line-height:1;margin:6px 0 2px;font-variant-numeric:tabular-nums}
+  .hero .totlbl{font-family:Oswald;font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted)}
+  .hero .rankpill{display:inline-block;margin-top:10px;font-family:Oswald;font-weight:600;font-size:12px;letter-spacing:.04em;
+    background:rgba(255,255,255,.06);border:1px solid var(--line2);border-radius:20px;padding:5px 13px}
+  .hero .rankpill b{color:var(--gold)}
 
-  /* ---------- Slider ---------- */
-  .viewport{flex:1;overflow:hidden;position:relative}
-  .track{display:flex;height:100%;transition:transform .38s cubic-bezier(.4,.05,.2,1)}
-  .screen{height:100%;overflow-y:auto;overflow-x:hidden;padding:4px 16px 92px;-webkit-overflow-scrolling:touch}
-  .screen::-webkit-scrollbar{width:0}
+  .card{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:14px;margin-bottom:12px}
+  .card h2{font-family:Oswald;font-size:13px;font-weight:600;letter-spacing:.05em;text-transform:uppercase;margin:0 0 12px;color:var(--muted);display:flex;align-items:center;gap:8px}
+  .card h2 .dot{width:7px;height:7px;border-radius:50%}
 
-  .shead{display:flex;justify-content:space-between;align-items:flex-end;margin:8px 2px 12px;gap:12px}
-  .shead h2{font-family:Oswald;font-weight:600;font-size:19px;margin:0;text-transform:uppercase;letter-spacing:.02em}
-  .shead p{margin:3px 0 0;font-size:11.5px;color:var(--muted);line-height:1.35}
-  .legend{display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end;flex:0 0 auto}
-  .lg{font-family:Oswald;font-size:10px;font-weight:600;letter-spacing:.03em;padding:4px 8px;border-radius:20px;
-    background:rgba(255,255,255,.05);border:1px solid var(--line);white-space:nowrap}
-  .lg b{color:var(--gold)}
+  .phases{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
+  .ph{background:var(--bg);border:1px solid var(--line);border-radius:11px;padding:9px 4px;text-align:center}
+  .ph .pv{font-family:Oswald;font-weight:700;font-size:20px;font-variant-numeric:tabular-nums}
+  .ph .pl{font-family:Oswald;font-size:9px;letter-spacing:.04em;text-transform:uppercase;color:var(--faint);margin-top:2px}
+  .ph.g .pv{color:var(--dir)} .ph.p .pv{color:var(--po)} .ph.e .pv{color:var(--cyan)} .ph.f .pv{color:var(--gold)}
 
-  /* ---------- Filas arrastrables ---------- */
-  .list{display:flex;flex-direction:column;gap:6px}
-  .trow{display:flex;align-items:center;gap:10px;background:var(--panel);border:1px solid var(--line);
-    border-radius:12px;padding:9px 12px 9px 10px;position:relative;overflow:hidden;touch-action:pan-y}
-  .trow::before{content:"";position:absolute;left:0;top:0;bottom:0;width:4px;background:var(--faint)}
-  .trow.t-dir::before{background:var(--dir)} .trow.t-po::before{background:var(--po)} .trow.t-out::before{background:var(--out)}
-  .grip{color:var(--faint);font-size:16px;cursor:grab;letter-spacing:-2px;padding:8px 4px;flex:0 0 auto;touch-action:none;margin-left:2px}
-  .grip:active{cursor:grabbing;color:var(--muted)}
-  .pos{font-family:Oswald;font-weight:600;font-size:19px;width:30px;text-align:center;flex:0 0 auto;font-variant-numeric:tabular-nums}
-  .t-dir .pos{color:var(--dir)} .t-po .pos{color:var(--po)} .t-out .pos{color:var(--out)}
-  .crest{width:26px;height:26px;border-radius:7px;flex:0 0 auto;display:flex;align-items:center;justify-content:center;
-    font-family:Oswald;font-weight:700;font-size:12px;color:#0a0e1c;overflow:hidden}
-  .crest.logo{background:#fff;padding:2px}
-  .crest.logo img{width:100%;height:100%;object-fit:contain;display:block}
-  .fcard .crest.logo{padding:4px}
-  /* escudos más grandes en las fases de entrada */
-  .trow .crest{width:33px;height:33px;font-size:13px}
-  .qcell .crest{width:30px;height:30px}
-  .porow .crest{width:33px;height:33px;font-size:13px}
-  .tname{font-weight:600;font-size:14.5px;flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-  .tier-tag{font-family:Oswald;font-size:9px;font-weight:600;letter-spacing:.07em;padding:3px 7px;border-radius:6px;flex:0 0 auto;text-transform:uppercase}
-  .t-dir .tier-tag{background:rgba(55,214,122,.14);color:var(--dir)}
-  .t-po .tier-tag{background:rgba(255,159,67,.14);color:var(--po)}
-  .t-out .tier-tag{background:rgba(240,85,95,.14);color:var(--out)}
-  .sortable-ghost{opacity:.35} .sortable-chosen{cursor:grabbing}
-  .divider{display:flex;align-items:center;gap:9px;padding:9px 4px 5px;user-select:none}
-  .divider span{font-family:Oswald;font-weight:600;font-size:10px;letter-spacing:.13em;text-transform:uppercase;white-space:nowrap}
-  .divider .ln{flex:1;height:1px}
-  .d-dir span{color:var(--dir)} .d-dir .ln{background:linear-gradient(90deg,var(--dir),transparent)}
-  .d-out span{color:var(--out)} .d-out .ln{background:linear-gradient(90deg,var(--out),transparent)}
+  .leader{display:flex;align-items:center;gap:12px}
+  .leader .crown{font-size:22px}
+  .leader .lnm{font-family:Oswald;font-weight:700;font-size:18px}
+  .leader .lsub{font-size:11.5px;color:var(--muted)}
+  .leader .lt{margin-left:auto;text-align:right}
+  .leader .lt .v{font-family:Oswald;font-weight:700;font-size:26px;color:var(--gold);font-variant-numeric:tabular-nums}
+  .leader .lt .l{font-family:Oswald;font-size:9px;letter-spacing:.08em;text-transform:uppercase;color:var(--faint)}
+  .lbreak{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-top:12px}
+  .lbreak div{text-align:center;font-size:11px;color:var(--muted)}
+  .lbreak div b{display:block;font-family:Oswald;font-size:14px;color:var(--text);font-variant-numeric:tabular-nums}
+  .mefirst{margin-top:10px;text-align:center;font-family:Oswald;font-size:12px;letter-spacing:.05em;text-transform:uppercase;color:var(--gold)}
 
-  /* ---------- Playoff ---------- */
-  .qual-block{background:linear-gradient(180deg,rgba(55,214,122,.08),transparent);border:1px solid rgba(55,214,122,.22);
-    border-radius:14px;padding:11px 12px;margin-bottom:14px}
-  .qual-block .qh{display:flex;align-items:center;gap:7px;margin-bottom:9px}
-  .qual-block .qh b{font-family:Oswald;font-size:13px;letter-spacing:.05em;text-transform:uppercase;color:var(--dir)}
-  .qgrid{display:grid;grid-template-columns:1fr 1fr;gap:6px}
-  .qcell{display:flex;align-items:center;gap:7px;font-size:12.5px;font-weight:600;background:rgba(255,255,255,.03);border-radius:8px;padding:6px 8px}
-  .qcell .qp{font-family:Oswald;color:var(--dir);width:16px;flex:0 0 auto}
-  .sel-counter{display:flex;align-items:center;gap:8px;font-size:12px;color:var(--muted);margin:2px 2px 12px}
-  .sel-counter .pill{font-family:Oswald;font-weight:600;background:var(--panel2);border:1px solid var(--line2);border-radius:20px;padding:3px 11px;color:var(--gold)}
-  .po-list{display:flex;flex-direction:column;gap:6px}
-  .porow{display:flex;align-items:center;gap:10px;background:var(--panel);border:1px solid var(--line);border-radius:12px;
-    padding:9px 12px;cursor:pointer;transition:.18s;position:relative;overflow:hidden}
-  .porow::before{content:"";position:absolute;left:0;top:0;bottom:0;width:4px;background:var(--po)}
-  .porow .pos{width:26px}
-  .porow.pick{background:linear-gradient(90deg,rgba(244,183,64,.14),var(--panel));border-color:rgba(244,183,64,.4)}
-  .porow.pick::before{background:var(--gold)}
-  .check{margin-left:auto;width:24px;height:24px;border-radius:50%;flex:0 0 auto;border:1.5px solid var(--line2);
-    display:flex;align-items:center;justify-content:center;font-size:13px;color:transparent;transition:.18s}
-  .porow.pick .check{background:var(--gold);border-color:var(--gold);color:#0a0e1c}
-  .porow.full{opacity:.45}
+  .state .srow{display:flex;align-items:center;gap:10px;padding:8px 0;border-top:1px solid var(--line);font-size:13px}
+  .state .srow:first-child{border-top:none}
+  .state .srow .nm{flex:1;font-weight:600}
+  .state .tag{font-family:Oswald;font-size:10px;font-weight:600;letter-spacing:.05em;text-transform:uppercase;padding:4px 10px;border-radius:20px}
+  .tag.abierta{background:rgba(55,214,122,.15);color:var(--dir)}
+  .tag.cerrada{background:rgba(240,85,95,.14);color:#ffb3b7}
+  .tag.pendiente{background:rgba(136,144,180,.14);color:var(--muted)}
 
-  /* ---------- Bracket ---------- */
-  .roundbar{display:none;gap:6px;padding:8px 16px 10px;flex:0 0 auto;z-index:5;
-    background:rgba(6,10,22,.72);backdrop-filter:blur(10px);border-bottom:1px solid var(--line)}
-  .show-rb .roundbar{display:flex}
-  .rtab{flex:1;font-family:Oswald;font-size:11px;font-weight:600;letter-spacing:.05em;text-transform:uppercase;text-align:center;
-    padding:7px 2px;border-radius:9px;background:rgba(255,255,255,.03);border:1px solid var(--line);color:var(--faint);cursor:pointer;transition:.2s}
-  .rtab.done{color:var(--dir);border-color:rgba(55,214,122,.3)}
-  .rtab.cur{color:var(--gold);background:var(--panel2);border-color:var(--line2)}
-  .round-lead{font-size:11.5px;color:var(--muted);margin:0 2px 10px;line-height:1.4}
-  .bmatches{display:flex;flex-direction:column;gap:10px}
-  .match{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:6px 10px;position:relative;
-    scroll-margin-top:74px;transition:border-color .2s}
-  .match.tappable{cursor:pointer}
-  .match.active{border-color:var(--gold)}
-  .match .mno{position:absolute;top:8px;right:11px;font-family:Oswald;font-size:10px;letter-spacing:.1em;color:var(--faint)}
-  .side{display:flex;align-items:center;gap:9px;padding:8px 2px}
-  .side + .side{border-top:1px solid var(--line)}
-  .side .crest{width:32px;height:32px;font-size:12px}
-  .side .sn{font-weight:600;font-size:14px;flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-  .side.empty .sn{color:var(--faint);font-weight:500;font-style:italic}
-  .sbox{width:40px;height:34px;flex:0 0 auto;border-radius:9px;background:var(--bg);border:1px solid var(--line2);
-    display:flex;align-items:center;justify-content:center;font-family:Oswald;font-weight:600;font-size:19px;font-variant-numeric:tabular-nums;color:var(--text)}
-  .sbox.blank{color:var(--faint)}
-  .side.win .sn{color:var(--gold)} .side.win .sbox{color:var(--gold);border-color:rgba(244,183,64,.5)}
-  .pentag{font-family:Oswald;font-size:9px;font-weight:600;color:var(--gold);letter-spacing:.06em;margin-left:6px;flex:0 0 auto}
-  .champ-card{margin-top:12px;text-align:center;padding:20px;border-radius:16px;
-    background:radial-gradient(120% 100% at 50% 0%,rgba(244,183,64,.16),transparent 70%),var(--panel);border:1px solid rgba(244,183,64,.35)}
-  .champ-card .lbl{font-family:Oswald;letter-spacing:.2em;font-size:11px;color:var(--gold);text-transform:uppercase}
-  .champ-card .nm{font-family:Oswald;font-weight:700;font-size:26px;margin-top:8px}
-  .champ-card .nm.tbd{color:var(--faint);font-size:17px;font-weight:500}
+  .quick{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+  .quick a{display:flex;flex-direction:column;gap:4px;text-decoration:none;background:var(--panel2);border:1px solid var(--line2);
+    border-radius:13px;padding:14px;color:var(--text);transition:.2s}
+  .quick a:hover{border-color:var(--gold)}
+  .quick a .qt{font-family:Oswald;font-weight:600;font-size:14px;letter-spacing:.03em}
+  .quick a .qd{font-size:11.5px;color:var(--muted)}
+  .quick a.admin{grid-column:1 / -1;background:transparent}
 
-  /* ---------- Botones ---------- */
-  .btn{width:100%;font-family:Oswald;font-weight:600;font-size:14px;letter-spacing:.05em;text-transform:uppercase;padding:13px;
-    border-radius:12px;border:none;cursor:pointer;background:linear-gradient(180deg,var(--gold),var(--gold-dim));color:#150f00;
-    box-shadow:0 8px 20px -8px rgba(244,183,64,.6);transition:.2s;margin-top:14px}
-  .btn.ghost{background:transparent;border:1px solid var(--line2);color:var(--muted);box-shadow:none;margin-top:8px}
+  .soon{font-size:12.5px;color:var(--faint);text-align:center;padding:6px 0}
+  .center-note{max-width:520px;margin:70px auto;text-align:center;color:var(--muted);line-height:1.5}
+  .center-note a{color:var(--gold)}
 
-  /* ---------- Resumen ---------- */
-  .card{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:13px 14px;margin-bottom:12px}
-  .card h3{font-family:Oswald;font-size:13px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;margin:0 0 10px;display:flex;align-items:center;gap:8px;color:var(--muted)}
-  .card h3 .dot{width:7px;height:7px;border-radius:50%}
-  .mini-list{display:flex;flex-direction:column;gap:3px}
-  .mini{display:flex;align-items:center;gap:9px;font-size:13px;padding:3px 0}
-  .mini .mp{font-family:Oswald;font-weight:600;width:22px;text-align:center;font-variant-numeric:tabular-nums;color:var(--muted)}
-  .mini .mn{font-weight:600;flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-  .chips{display:flex;flex-wrap:wrap;gap:6px}
-  .chip{display:flex;align-items:center;gap:6px;background:rgba(244,183,64,.1);border:1px solid rgba(244,183,64,.3);border-radius:20px;padding:5px 11px;font-size:12.5px;font-weight:600}
-  .chip .crest{width:16px;height:16px;font-size:9px}
-  .path{display:flex;flex-direction:column;gap:6px}
-  .prow{display:flex;align-items:center;gap:10px;font-size:13px}
-  .prow .plbl{font-family:Oswald;font-size:10px;letter-spacing:.08em;text-transform:uppercase;color:var(--faint);width:62px;flex:0 0 auto}
-  .prow .pv{font-weight:600}
-  .scoring{display:grid;grid-template-columns:auto 1fr;gap:5px 12px;font-size:12px;margin-top:2px}
-  .scoring .sp{font-family:Oswald;font-weight:600;color:var(--gold);font-variant-numeric:tabular-nums}
-  .scoring .sd{color:var(--muted)}
-  /* resumen · cuadro */
-  .finalists{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:4px}
-  .fcard{position:relative;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:5px;padding:15px 8px 12px;border-radius:14px;background:var(--panel2);border:1px solid var(--line)}
-  .fcard .crest{border-radius:11px}
-  .fcard.champ .crest{width:58px;height:58px;font-size:20px;border-radius:15px}
-  .fcard.sub .crest{width:40px;height:40px;font-size:15px}
-  .fcard .flbl{font-family:Oswald;font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted)}
-  .fcard .fnm{font-family:Oswald;font-weight:600;font-size:14px;text-align:center;line-height:1.05}
-  .fcard.champ .fnm{font-size:18px}
-  .fcard.champ{background:radial-gradient(120% 100% at 50% 0%,rgba(244,183,64,.2),transparent 70%),var(--panel2);border-color:rgba(244,183,64,.5)}
-  .fcard.champ .flbl,.fcard.champ .fnm{color:var(--gold)}
-  .fcard.sub{border-color:rgba(200,203,224,.28)}
-  .fcard.sub .fnm{color:#d6d9ec}
-  .ftrophy{position:absolute;top:-10px;font-size:16px}
-  .sublabel{display:flex;align-items:center;gap:7px;font-family:Oswald;font-size:11px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin:15px 2px 9px}
-  .sublabel .sl-dot{width:7px;height:7px;border-radius:50%;flex:0 0 auto}
-  .sublabel .sl-n{margin-left:auto;color:var(--faint);font-size:10px;letter-spacing:.04em}
-  .tcgrid{display:grid;gap:10px 6px}
-  .tc{display:flex;flex-direction:column;align-items:center;gap:5px;text-align:center;min-width:0}
-  .tc .crest{width:30px;height:30px;font-size:12px}
-  .tc span{font-size:10px;font-weight:600;line-height:1.15;color:var(--text);max-width:100%;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical}
-  .tc.empty .crest{opacity:.35} .tc.empty span{color:var(--faint)}
-
-  /* ---------- Barra inferior ---------- */
-  .tabbar{flex:0 0 auto;display:flex;background:rgba(6,10,22,.88);backdrop-filter:blur(12px);border-top:1px solid var(--line);
-    padding:8px 8px calc(8px + env(safe-area-inset-bottom));position:relative;z-index:6}
-  .tab{flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;padding:5px 2px;cursor:pointer;color:var(--faint);transition:.2s}
-  .tab svg{width:21px;height:21px} .tab span{font-family:Oswald;font-size:10px;font-weight:500;letter-spacing:.04em;text-transform:uppercase}
-  .tab.on{color:var(--gold)}
-  .hint{position:absolute;bottom:100px;left:50%;transform:translateX(-50%);font-size:11px;color:var(--faint);display:flex;align-items:center;gap:6px;
-    pointer-events:none;background:rgba(6,10,22,.7);padding:5px 12px;border-radius:20px;border:1px solid var(--line);animation:fade 5.5s forwards}
-  @keyframes fade{0%,72%{opacity:1}100%{opacity:0}}
-
-  /* ---------- Teclado marcador (bottom sheet) ---------- */
-  .kb-scrim{position:absolute;inset:0;background:transparent;opacity:0;pointer-events:none;transition:.2s;z-index:4}
-  .kb-open .kb-scrim{opacity:1;pointer-events:auto}
-  .kbsheet{position:absolute;left:0;right:0;bottom:0;z-index:9;background:linear-gradient(180deg,var(--panel),var(--bg2));
-    border-top:1px solid var(--line2);border-radius:22px 22px 0 0;padding:8px 14px calc(16px + env(safe-area-inset-bottom));
-    transform:translateY(110%);transition:transform .3s cubic-bezier(.3,.7,.2,1);box-shadow:0 -20px 50px -20px rgba(0,0,0,.7)}
-  .kb-open .kbsheet{transform:translateY(0)}
-  .kb-grab{width:38px;height:4px;border-radius:3px;background:var(--line2);margin:2px auto 8px}
-  .kb-head{display:flex;align-items:center;gap:8px;margin-bottom:8px}
-  .kb-nav{width:38px;height:38px;flex:0 0 auto;border-radius:11px;background:rgba(255,255,255,.05);border:1px solid var(--line2);
-    color:var(--text);font-size:18px;cursor:pointer;display:flex;align-items:center;justify-content:center}
-  .kb-nav:disabled{opacity:.3;cursor:default}
-  .kb-title{flex:1;display:flex;align-items:center;justify-content:center;gap:8px;min-width:0}
-  .kb-title .crest{width:22px;height:22px;font-size:10px}
-  .kb-title .nm{font-weight:700;font-size:13.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:34%}
-  .kb-title .vs{font-family:Oswald;font-size:10px;color:var(--faint);letter-spacing:.08em}
-  .kb-display{display:flex;align-items:center;justify-content:center;gap:16px;font-family:Oswald;font-weight:700;font-size:40px;
-    padding:6px 0 12px;font-variant-numeric:tabular-nums}
-  .kb-display .sep{color:var(--faint);font-size:30px}
-  .kb-display .d{min-width:44px;text-align:center;color:var(--gold)}
-  .kb-display .d.empty{color:var(--faint)}
-  .kb-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:6px}
-  .kb-key{font-family:Oswald;font-weight:500;font-size:13px;padding:9px 2px;border-radius:9px;background:rgba(255,255,255,.045);
-    border:1px solid var(--line);color:var(--text);cursor:pointer;text-align:center;font-variant-numeric:tabular-nums;transition:.12s}
-  .kb-key:active{transform:scale(.94)}
-  .kb-key.on{background:var(--panel2);border-color:var(--gold);color:var(--gold)}
-  .kb-steppers{display:flex;align-items:center;gap:5px;margin-top:9px}
-  .kb-steppers .grp{display:flex;gap:5px;flex:1}
-  .kb-steppers .grp .kb-key{flex:1;padding:8px 0;font-size:12.5px}
-  .kb-steppers .dash{color:var(--faint);font-family:Oswald;padding:0 2px}
-  .kb-pens{display:flex;align-items:center;gap:8px;margin-top:10px;font-size:11.5px;color:var(--muted);flex-wrap:wrap}
-  .kb-pens .pk{font-family:Inter;font-size:12px;font-weight:600;padding:6px 12px;border-radius:9px;background:rgba(255,255,255,.05);border:1px solid var(--line2);color:var(--text);cursor:pointer;display:flex;align-items:center;gap:6px}
-  .kb-pens .pk.on{background:var(--gold);color:#0a0e1c;border-color:var(--gold)}
-  .kb-pens .pk .crest{width:16px;height:16px;font-size:9px}
+  /* footer común */
+  .appfoot{position:fixed;left:0;right:0;bottom:0;z-index:50;display:flex;justify-content:center;gap:2px;
+    background:rgba(6,10,22,.94);backdrop-filter:blur(12px);border-top:1px solid var(--line);
+    padding:8px 6px calc(8px + env(safe-area-inset-bottom))}
+  .appfoot a{flex:1;max-width:130px;display:flex;flex-direction:column;align-items:center;gap:3px;
+    text-decoration:none;color:var(--faint);padding:5px 2px;transition:.2s}
+  .appfoot a svg{width:21px;height:21px}
+  .appfoot a span{font-family:Oswald;font-size:10px;font-weight:500;letter-spacing:.04em;text-transform:uppercase}
+  .appfoot a.on{color:var(--gold)} .appfoot a:hover{color:var(--muted)} .appfoot a.on:hover{color:var(--gold)}
 </style>
 </head>
 <body>
-<div class="app"><div class="phone" id="phone">
-
-  <header id="hdr">
-    <div class="brand">
-      <svg class="starball" viewBox="0 0 40 40" fill="none">
-        <circle cx="20" cy="20" r="18" fill="#0e1530" stroke="#2a355f"/>
-        <path d="M20 7l2.6 5.3 5.9.9-4.3 4.1 1 5.8L20 26l-5.2 2.7 1-5.8-4.3-4.1 5.9-.9z" fill="#f4b740"/>
-        <circle cx="20" cy="20" r="18" stroke="#74e4ff" stroke-opacity=".25"/>
-      </svg>
-      <div>
-        <div class="kicker">Liga de Campeones · 2026/27</div>
-        <div class="title">Porra <b>Champions</b></div>
-      </div>
-    </div>
-    <div class="phase-strip" id="phaseStrip">
-      <div class="pchip on" data-go="0"><div class="pn">Fase 1</div><div class="pt">Grupos</div><div class="bar"></div></div>
-      <div class="pchip" data-go="1"><div class="pn">Fase 2</div><div class="pt">Playoff</div><div class="bar"></div></div>
-      <div class="pchip" data-go="2"><div class="pn">Fase 3</div><div class="pt">Eliminatorias</div><div class="bar"></div></div>
-      <div class="pchip" data-go="6"><div class="pn">Fase 4</div><div class="pt">Resumen</div><div class="bar"></div></div>
-    </div>
+<div class="wrap" id="wrap" style="display:none">
+  <header>
+    <svg class="starball" viewBox="0 0 40 40" fill="none">
+      <circle cx="20" cy="20" r="18" fill="#0e1530" stroke="#2a355f"/>
+      <path d="M20 7l2.6 5.3 5.9.9-4.3 4.1 1 5.8L20 26l-5.2 2.7 1-5.8-4.3-4.1 5.9-.9z" fill="#f4b740"/>
+    </svg>
+    <div class="htitle">Porra <b>Champions</b></div>
+    <button class="userchip" id="userChip"><span class="un" id="uName"></span><span class="out">Salir</span></button>
   </header>
 
-  <div class="roundbar" id="roundBar">
-    <div class="rtab" data-goround="r16">Octavos</div>
-    <div class="rtab" data-goround="qf">Cuartos</div>
-    <div class="rtab" data-goround="sf">Semis</div>
-    <div class="rtab" data-goround="fn">Final</div>
-  </div>
+  <div id="content"></div>
+</div>
 
-  <div class="viewport" id="viewport">
-    <div class="track" id="track">
+<div class="center-note" id="gate">Cargando…</div>
 
-      <!-- 0 · GRUPOS -->
-      <section class="screen">
-        <div class="shead">
-          <div><h2>Fase de grupos</h2><p>Ordena los 36 arrastrando. Tu posición final para cada equipo.</p></div>
-          <div class="legend"><div class="lg"><b>+3</b> rango</div><div class="lg"><b>+5</b> puesto</div></div>
-        </div>
-        <div class="list" id="groupList"></div>
-      </section>
+<nav class="appfoot">
+  <a data-page="home" href="index.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11l9-7 9 7"/><path d="M5 10v10h14V10"/></svg><span>Home</span></a>
+  <a data-page="pron" href="porra-champions.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="6" y="4" width="12" height="16" rx="2"/><path d="M9.5 4h5v2.5h-5z"/><path d="M9 11h6M9 15h4"/></svg><span>Mi pronóstico</span></a>
+  <a data-page="clas" href="resultados.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 4h10v4a5 5 0 01-10 0z"/><path d="M7 6H4v1.5a3 3 0 003 3M17 6h3v1.5a3 3 0 01-3 3"/><path d="M9.5 20h5M12 14v6"/></svg><span>Clasificación</span></a>
+  <a data-page="admin" href="admin.html" class="adminonly" style="display:none"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M12 3v2M12 19v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M3 12h2M19 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg><span>Admin</span></a>
+</nav>
 
-      <!-- 1 · PLAYOFF -->
-      <section class="screen">
-        <div class="shead">
-          <div><h2>Fase de playoff</h2><p>Elige qué 8 del playoff se clasifican a octavos.</p></div>
-          <div class="legend"><div class="lg"><b>+9</b> por equipo</div></div>
-        </div>
-        <div class="qual-block">
-          <div class="qh">🔒 <b>Ya clasificados · 1–8</b></div>
-          <div class="qgrid" id="qualGrid"></div>
-        </div>
-        <div class="sel-counter">Seleccionados <span class="pill" id="selPill">0 / 8</span> de los puestos 9–24</div>
-        <div class="po-list" id="poList"></div>
-      </section>
+<script type="module">
+  import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
+  const SUPABASE_URL = 'https://vucyzvyohltyontitcfr.supabase.co'
+  const SUPABASE_KEY = 'sb_publishable_i_RtEH-_kVhcJcoTsyVfkA_xxWrkmzd'
+  const sb = createClient(SUPABASE_URL, SUPABASE_KEY)
+  const $ = id => document.getElementById(id)
+  const esc = s => (s==null?'':String(s)).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]))
 
-      <!-- 2..5 · RONDAS (se generan) -->
-      <section class="screen" data-round="r16"></section>
-      <section class="screen" data-round="qf"></section>
-      <section class="screen" data-round="sf"></section>
-      <section class="screen" data-round="fn"></section>
+  const { data:{ session } } = await sb.auth.getSession()
+  if(!session){ location.replace('login.html') }
+  else { await cargar(session) }
 
-      <!-- 6 · RESUMEN -->
-      <section class="screen">
-        <div class="shead"><div><h2>Tu apuesta</h2><p>Resumen de todas tus previsiones.</p></div></div>
-        <div id="summary"></div>
-        <div class="card">
-          <h3><span class="dot" style="background:var(--gold)"></span>Cómo se puntúa</h3>
-          <div class="scoring">
-            <div class="sp">+3</div><div class="sd">Rango correcto en grupos (1–8 / 9–24 / 25–36)</div>
-            <div class="sp">+5</div><div class="sd">Puesto exacto en grupos</div>
-            <div class="sp">+9</div><div class="sd">Equipo que pasa el playoff</div>
-            <div class="sp">+4</div><div class="sd">Ganador/perdedor de un cruce (90')</div>
-            <div class="sp">+5</div><div class="sd">Emparejamiento (cuartos, semis, final)</div>
-            <div class="sp">+9</div><div class="sd">Resultado exacto de un cruce</div>
-          </div>
-        </div>
-      </section>
+  $('userChip').onclick = async () => { await sb.auth.signOut(); location.replace('login.html') }
+  document.querySelectorAll('.appfoot a').forEach(a=>a.classList.toggle('on', a.dataset.page==='home'))
 
-    </div>
-    <div class="hint" id="hint">← desliza entre fases y rondas →</div>
-  </div>
+  async function cargar(session){
+    const uid = session.user.id
+    const [ prof, punt, cfg ] = await Promise.all([
+      sb.from('profiles').select('nombre,es_admin').eq('id',uid).single(),
+      sb.from('puntuaciones').select('user_id,nombre,total,r1_grupos,r2_playoff,r3_elim,r4_pos').order('total',{ascending:false}),
+      sb.from('config_torneo').select('ventana_gp,ventana_elim').eq('id',1).single()
+    ])
+    const nombre = (prof.data && prof.data.nombre) || (session.user.email||'').split('@')[0]
+    $('uName').textContent = nombre
+    if(prof.data && prof.data.es_admin){ const el=document.querySelector('.appfoot .adminonly'); if(el) el.style.display='flex' }
 
-  <nav class="tabbar" id="tabbar">
-    <div class="tab on" data-go="0"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 6h16M4 12h16M4 18h10"/></svg><span>Grupos</span></div>
-    <div class="tab" data-go="1"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M9 6l6 6-6 6"/><path d="M4 6l6 6-6 6" opacity=".4"/></svg><span>Playoff</span></div>
-    <div class="tab" data-go="2"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 5v5a2 2 0 002 2h5m0 0h5a2 2 0 002 2v5"/><circle cx="20" cy="12" r="1.4" fill="currentColor" stroke="none"/></svg><span>Bracket</span></div>
-    <div class="tab" data-go="6"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M8 3v4M16 3v4M6 5h12a2 2 0 012 2v11a2 2 0 01-2 2H6a2 2 0 01-2-2V7a2 2 0 012-2z"/><path d="M8 12h8M8 16h5"/></svg><span>Resumen</span></div>
-  </nav>
-
-  <!-- Teclado marcador -->
-  <div class="kb-scrim" id="kbScrim"></div>
-  <div class="kbsheet" id="kbsheet">
-    <div class="kb-grab"></div>
-    <div class="kb-head">
-      <button class="kb-nav" id="kbPrev">‹</button>
-      <div class="kb-title" id="kbTitle"></div>
-      <button class="kb-nav" id="kbNext">›</button>
-    </div>
-    <div class="kb-display" id="kbDisplay"></div>
-    <div class="kb-grid" id="kbGrid"></div>
-    <div class="kb-steppers">
-      <div class="grp" id="kbStepA"></div>
-      <div class="dash">—</div>
-      <div class="grp" id="kbStepB"></div>
-    </div>
-    <div class="kb-pens" id="kbPens"></div>
-  </div>
-
-</div></div>
-
-<script>
-/* ---------- Datos de ejemplo ---------- */
-const TEAMS = [
-  ["Real Madrid","#f4b740","real-madrid.svg"],
-  ["Manchester City","#6cc6e6","manchester-city.svg"],
-  ["Bayern","#e8484f","bayern-munich.svg"],
-  ["PSG","#0a3a6b","paris-saint-germain-psg.svg"],
-  ["Liverpool","#e0333b","liverpool-fc.svg"],
-  ["Arsenal","#ef4b52","arsenal.svg"],
-  ["Inter","#2a5fd6","inter-milan.svg"],
-  ["Barcelona","#9c1a3c","fc-barcelona.svg"],
-  ["Atlético","#c8102e","atletico-madrid.svg"],
-  ["Dortmund","#f4d000","borussia-dortmund.svg"],
-  ["Manchester United","#da2128","manchester-united.svg"],
-  ["Nápoles","#1b7cc4","napoli.svg"],
-  ["Porto","#1b6bb0","fc-porto.svg"],
-  ["Sporting","#1e8a4c","sporting-cp.svg"],
-  ["Villarreal","#f2c14a","villarreal-cf.svg"],
-  ["RB Leipzig","#d40a2c","rb-leipzig.svg"],
-  ["PSV","#e2202a","psv-eindhoven.svg"],
-  ["Feyenoord","#d81f2a","feyenoord.svg"],
-  ["Roma","#8f1a2c","roma.svg"],
-  ["Real Betis","#1e8a4c","real-betis-balompie.svg"],
-  ["Stuttgart","#e02427","vfb-stuttgart.svg"],
-  ["Brujas","#1a4bb0","club-brugge.svg"],
-  ["Lille","#d6202a","losc-lille.svg"],
-  ["Lens","#e6c200","rc-lens.svg"],
-  ["Galatasaray","#e0342a","galatasaray.svg"],
-  ["Shakhtar","#e26a17","shakhtar-donetsk.svg"],
-  ["Slavia Praga","#d61f2a","slavia-praha.svg"],
-  ["Como","#1b3a6b","como-1907.svg"],
-  // sin escudo todavía → caen al escudo de color con iniciales
-  ["Benfica","#d6303c"],["Ajax","#d81f2a"],["Atalanta","#1a4bb0"],["Juventus","#111827"],
-  ["Milan","#c8202e"],["Chelsea","#1b4fbf"],["Mónaco","#c8102e"],["Celtic","#1a8a4c"]
-];
-const abbr = n => n.replace(/[^A-Za-zÀ-ÿ0-9 ]/g,"").split(" ").map(w=>w[0]).join("").slice(0,3).toUpperCase();
-const state = {
-  order: TEAMS.map(t=>t[0]),
-  color: Object.fromEntries(TEAMS.map(t=>[t[0],t[1]])),
-  logo:  Object.fromEntries(TEAMS.filter(t=>t[2]).map(t=>[t[0],t[2]])),
-  advance: [], bracket:null
-};
-const crest = name => {
-  const bg = state.color[name]||'#334', f = state.logo[name];
-  if(f) return `<div class="crest logo"><img src="escudos/${f}" alt="${name}" loading="lazy" onerror="this.parentNode.classList.remove('logo');this.parentNode.style.background='${bg}';this.parentNode.textContent='${abbr(name)}'"></div>`;
-  return `<div class="crest" style="background:${bg}">${abbr(name)}</div>`;
-};
-
-const N = 7;
-const ROUND_IDX = {r16:2, qf:3, sf:4, fn:5};
-const IDX_ROUND = {2:'r16',3:'qf',4:'sf',5:'fn'};
-
-/* ---------- Navegación ---------- */
-let idx=0;
-const track=document.getElementById('track');
-const screens=[...document.querySelectorAll('.screen')];
-track.style.width=(N*100)+'%';
-screens.forEach(s=>{ s.style.width=(100/N)+'%'; s.addEventListener('scroll',onScroll); });
-function goTo(i){
-  idx=Math.max(0,Math.min(N-1,i));
-  const inBracket = idx>=2&&idx<=5;
-  if(kb.open && !inBracket) closeKB();
-  track.style.transform=`translateX(-${idx*(100/N)}%)`;
-  const phase = idx===0?0:idx===1?1:idx===6?6:2;
-  document.querySelectorAll('.tab,.pchip').forEach(t=>t.classList.toggle('on',+t.dataset.go===phase));
-  phone.classList.toggle('show-rb', inBracket);
-  updateHdrMin();
-  if(idx===1) renderPlayoff();
-  if(inBracket) ensureBracket();
-  if(idx===6) renderSummary();
-  updateRoundBar();
-}
-function updateRoundBar(){
-  document.querySelectorAll('#roundBar .rtab').forEach(t=>{
-    const k=t.dataset.goround;
-    t.classList.toggle('cur', ROUND_IDX[k]===idx);
-    t.classList.toggle('done', ROUND_IDX[k]!==idx && state.bracket && complete(k) && state.bracket[k].every(m=>m.a));
-  });
-}
-document.querySelectorAll('[data-go]').forEach(el=>el.addEventListener('click',()=>goTo(+el.dataset.go)));
-
-/* header colapsable segun scroll */
-function onScroll(e){ if(screens[idx]===e.target) updateHdrMin(); }
-function updateHdrMin(){
-  const st=screens[idx]?screens[idx].scrollTop:0;
-  document.getElementById('phone').classList.toggle('hdr-min', st>6 || (idx>=2&&idx<=5));
-}
-
-/* swipe */
-const vp=document.getElementById('viewport');
-let sx=0,sy=0,sw=false;
-vp.addEventListener('touchstart',e=>{sx=e.touches[0].clientX;sy=e.touches[0].clientY;sw=true;},{passive:true});
-vp.addEventListener('touchend',e=>{
-  if(!sw)return; sw=false;
-  const dx=e.changedTouches[0].clientX-sx, dy=e.changedTouches[0].clientY-sy;
-  if(Math.abs(dx)>55&&Math.abs(dx)>Math.abs(dy)*1.6) goTo(idx+(dx<0?1:-1));
-},{passive:true});
-
-/* ---------- GRUPOS ---------- */
-const groupList=document.getElementById('groupList');
-const tierOf=p=>p<=8?'t-dir':p<=24?'t-po':'t-out';
-const tierTag=p=>p<=8?'Directo':p<=24?'Playoff':'Fuera';
-function buildGroup(){
-  groupList.innerHTML=state.order.map(n=>`
-    <div class="trow" data-team="${n}"><div class="pos"></div>${crest(n)}
-      <div class="tname">${n}</div><div class="tier-tag"></div><div class="grip">⋮⋮</div></div>`).join('');
-  const dPO=document.createElement('div');dPO.className='divider d-dir';
-  dPO.innerHTML='<span>Directos ↑ · Playoff ↓</span><div class="ln"></div>';
-  const dOUT=document.createElement('div');dOUT.className='divider d-out';
-  dOUT.innerHTML='<span>Playoff ↑ · Eliminados ↓</span><div class="ln"></div>';
-  function relayout(){
-    const rows=[...groupList.querySelectorAll('.trow')];
-    state.order=rows.map(r=>r.dataset.team);
-    rows.forEach((r,i)=>{const p=i+1;r.querySelector('.pos').textContent=p;
-      r.querySelector('.tier-tag').textContent=tierTag(p);
-      r.classList.remove('t-dir','t-po','t-out');r.classList.add(tierOf(p));});
-    if(rows[8])groupList.insertBefore(dPO,rows[8]);
-    if(rows[24])groupList.insertBefore(dOUT,rows[24]);
+    const rows = punt.data || []
+    const cfgd = cfg.data || {ventana_gp:'—',ventana_elim:'—'}
+    $('gate').style.display='none'; $('wrap').style.display='block'
+    render(uid, nombre, rows, cfgd, prof.data && prof.data.es_admin)
   }
-  relayout();
-  Sortable.create(groupList,{animation:160,handle:'.grip',filter:'.divider',ghostClass:'sortable-ghost',
-    forceFallback:true,fallbackTolerance:4,delayOnTouchOnly:true,delay:60,
-    onEnd:()=>{relayout();state.bracket=null;}});
-}
 
-/* ---------- PLAYOFF ---------- */
-function renderPlayoff(){
-  const qual=state.order.slice(0,8), pool=state.order.slice(8,24);
-  state.advance=state.advance.filter(t=>pool.includes(t));
-  document.getElementById('qualGrid').innerHTML=qual.map((n,i)=>`
-    <div class="qcell"><span class="qp">${i+1}</span>${crest(n)}<span style="flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${n}</span></div>`).join('');
-  const list=document.getElementById('poList');
-  list.innerHTML=pool.map((n,i)=>{
-    const p=state.advance.includes(n);
-    return `<div class="porow ${p?'pick':''}" data-team="${n}"><div class="pos" style="color:var(--po)">${i+9}</div>${crest(n)}<div class="tname">${n}</div><div class="check">✓</div></div>`;
-  }).join('');
-  const full=state.advance.length>=8;
-  list.querySelectorAll('.porow').forEach(row=>{
-    if(full&&!row.classList.contains('pick'))row.classList.add('full');
-    row.addEventListener('click',()=>{
-      const t=row.dataset.team;
-      if(state.advance.includes(t))state.advance=state.advance.filter(x=>x!==t);
-      else{if(state.advance.length>=8)return;state.advance.push(t);}
-      state.bracket=null; renderPlayoff();
-    });
-  });
-  document.getElementById('selPill').textContent=`${state.advance.length} / 8`;
-}
+  function statTag(v){ return `<span class="tag ${v}">${v}</span>` }
 
-/* ---------- BRACKET ---------- */
-const ROUNDS=[['r16','Octavos',8],['qf','Cuartos',4],['sf','Semis',2],['fn','Final',1]];
-const blank=()=>({a:null,b:null,ga:'',gb:'',pen:null});
-function ensureBracket(){
-  const qual=state.order.slice(0,8), adv=[...state.advance];
-  const seed=JSON.stringify([qual,adv]);
-  if(!state.bracket || state.bracket._seed!==seed){
-    const r16=[];for(let i=0;i<8;i++){const m=blank();m.a=qual[i]||null;m.b=adv[i]||null;r16.push(m);}
-    state.bracket={_seed:seed,r16,qf:[blank(),blank(),blank(),blank()],sf:[blank(),blank()],fn:[blank()]};
+  function render(uid, nombre, rows, cfg, isAdmin){
+    const me = rows.find(r=>r.user_id===uid)
+    const myRank = me ? rows.findIndex(r=>r.user_id===uid)+1 : null
+    const leader = rows[0] || null
+    const soyLider = leader && me && leader.user_id===uid
+
+    const hero = `
+      <div class="hero">
+        <div class="hi">Hola, <b>${esc(nombre)}</b></div>
+        <div class="tot">${me? me.total : 0}</div>
+        <div class="totlbl">Puntos totales</div>
+        ${myRank? `<div class="rankpill">Vas <b>${myRank}º</b> de ${rows.length}</div>` : `<div class="rankpill">Aún sin puntuar</div>`}
+      </div>`
+
+    const misfases = `
+      <div class="card">
+        <h2><span class="dot" style="background:var(--gold)"></span>Tus puntos por fase</h2>
+        <div class="phases">
+          <div class="ph g"><div class="pv">${me?me.r1_grupos:0}</div><div class="pl">Grupos</div></div>
+          <div class="ph p"><div class="pv">${me?me.r2_playoff:0}</div><div class="pl">Playoff</div></div>
+          <div class="ph e"><div class="pv">${me?me.r3_elim:0}</div><div class="pl">Elim.</div></div>
+          <div class="ph f"><div class="pv">${me?me.r4_pos:0}</div><div class="pl">Posición</div></div>
+        </div>
+      </div>`
+
+    const lider = leader ? `
+      <div class="card">
+        <h2><span class="dot" style="background:var(--gold)"></span>Líder actual</h2>
+        <div class="leader">
+          <span class="crown">👑</span>
+          <div><div class="lnm">${esc(leader.nombre||'—')}</div><div class="lsub">al frente de la porra</div></div>
+          <div class="lt"><div class="v">${leader.total}</div><div class="l">puntos</div></div>
+        </div>
+        <div class="lbreak">
+          <div><b>${leader.r1_grupos}</b>Grupos</div>
+          <div><b>${leader.r2_playoff}</b>Playoff</div>
+          <div><b>${leader.r3_elim}</b>Elim.</div>
+          <div><b>${leader.r4_pos}</b>Posición</div>
+        </div>
+        ${soyLider? `<div class="mefirst">★ ¡Eres tú! Vas primero ★</div>`:''}
+      </div>` : `
+      <div class="card"><h2><span class="dot" style="background:var(--gold)"></span>Líder actual</h2>
+        <div class="soon">Todavía no hay puntuaciones. Cuando el admin recalcule, aparecerá aquí.</div></div>`
+
+    const estado = `
+      <div class="card state">
+        <h2><span class="dot" style="background:var(--cyan)"></span>Estado de la porra</h2>
+        <div class="srow"><span class="nm">Grupos + Playoff</span>${statTag(cfg.ventana_gp)}</div>
+        <div class="srow"><span class="nm">Eliminatorias</span>${statTag(cfg.ventana_elim)}</div>
+      </div>`
+
+    const quick = `
+      <div class="card">
+        <h2><span class="dot" style="background:var(--dir)"></span>Accesos</h2>
+        <div class="quick">
+          <a href="porra-champions.html"><span class="qt">Mi pronóstico</span><span class="qd">Edita tus apuestas</span></a>
+          <a href="resultados.html"><span class="qt">Clasificación</span><span class="qd">Tabla y puntos</span></a>
+          ${isAdmin? `<a class="admin" href="admin.html"><span class="qt">⚙ Administración</span><span class="qd">Resultados, ventanas y recálculo</span></a>`:''}
+        </div>
+      </div>`
+
+    const soon = `<div class="card"><h2><span class="dot" style="background:var(--po)"></span>Próximos partidos</h2><div class="soon">Próximamente 🗓️</div></div>`
+
+    $('content').innerHTML = hero + misfases + lider + estado + quick + soon
   }
-  renderBracket();
-}
-function winner(m){if(!m||m.a==null||m.b==null||m.ga===''||m.gb==='')return null;
-  const a=+m.ga,b=+m.gb;return a>b?m.a:b>a?m.b:m.pen;}
-function complete(k){return state.bracket[k].every(m=>winner(m)!=null);}
-function propagate(){const b=state.bracket;
-  for(let i=0;i<4;i++){b.qf[i].a=winner(b.r16[i*2]);b.qf[i].b=winner(b.r16[i*2+1]);clean(b.qf[i]);}
-  for(let i=0;i<2;i++){b.sf[i].a=winner(b.qf[i*2]);b.sf[i].b=winner(b.qf[i*2+1]);clean(b.sf[i]);}
-  b.fn[0].a=winner(b.sf[0]);b.fn[0].b=winner(b.sf[1]);clean(b.fn[0]);}
-function clean(m){if(m.a==null||m.b==null){m.ga='';m.gb='';m.pen=null;}}
-
-document.querySelectorAll('#roundBar .rtab').forEach(t=>t.addEventListener('click',()=>{if(kb.open)closeKB();goTo(ROUND_IDX[t.dataset.goround]);}));
-function matchCard(m,key,i){
-  const w=winner(m);
-  const side=(nm,g,other)=>{
-    if(!nm)return `<div class="side empty"><div class="crest" style="background:#222a44">?</div><div class="sn">Por definir</div><div class="sbox blank">–</div></div>`;
-    const pen = (m.a&&m.b&&m.ga!==''&&m.gb!==''&&+m.ga===+m.gb&&m.pen===nm)?'<span class="pentag">PEN</span>':'';
-    return `<div class="side ${w===nm?'win':''}">${crest(nm)}<div class="sn">${nm}</div>${pen}<div class="sbox ${g===''?'blank':''}">${g===''?'–':g}</div></div>`;
-  };
-  const tap = (m.a&&m.b)?'tappable':'';
-  return `<div class="match ${tap}" data-k="${key}" data-i="${i}"><div class="mno">${key.toUpperCase()}·${i+1}</div>${side(m.a,m.ga)}${side(m.b,m.gb)}</div>`;
-}
-function renderBracket(){
-  if(!state.bracket)return;
-  propagate();
-  ROUNDS.forEach(([key,label,n])=>{
-    const sc=screens[ROUND_IDX[key]];
-    const lead={r16:'8 cruces · los 8 directos contra los 8 del playoff.',qf:'Ganadores de octavos.',sf:'Ganadores de cuartos.',fn:'Un partido, un campeón.'}[key];
-    let html=`<div class="round-lead">${lead}</div>`;
-    html+=`<div class="bmatches">`+state.bracket[key].map((m,i)=>matchCard(m,key,i)).join('')+`</div>`;
-    if(key==='fn'){
-      const ch=winner(state.bracket.fn[0]);
-      html+=`<div class="champ-card"><div class="lbl">★ Tu campeón ★</div><div class="nm ${ch?'':'tbd'}">${ch||'Por decidir'}</div></div>`;
-    }
-    sc.innerHTML=html;
-  });
-  document.querySelectorAll('.match.tappable').forEach(mc=>mc.addEventListener('click',()=>openKB(mc.dataset.k,+mc.dataset.i)));
-  updateRoundBar();
-  if(kb.open){ renderKB(); const mc=document.querySelector(`.screen[data-round="${kb.key}"] .match[data-i="${kb.i}"]`); if(mc)mc.classList.add('active'); }
-}
-
-/* ---------- Teclado marcador ---------- */
-const kb={open:false,key:null,i:0};
-const SCORELINES=["0-0","0-1","1-0","0-2","2-0","0-3","3-0","0-4","4-0","1-1","1-2","2-1","1-3","3-1","1-4","4-1","2-2","2-3","3-2","2-4","4-2","3-3","3-4","4-3","4-4"];
-const phone=document.getElementById('phone');
-function curMatch(){return state.bracket[kb.key][kb.i];}
-function matchesInRound(){return state.bracket[kb.key];}
-function openKB(key,i){
-  kb.open=true;kb.key=key;kb.i=i;
-  phone.classList.add('kb-open');
-  renderKB();
-  const mc=document.querySelector(`.screen[data-round="${key}"] .match[data-i="${i}"]`);
-  document.querySelectorAll('.match.active').forEach(x=>x.classList.remove('active'));
-  if(mc){mc.classList.add('active');setTimeout(()=>mc.scrollIntoView({behavior:'smooth',block:'start'}),80);}
-}
-function closeKB(){kb.open=false;phone.classList.remove('kb-open');
-  document.querySelectorAll('.match.active').forEach(x=>x.classList.remove('active'));updateHdrMin();}
-function kbSet(ga,gb){const m=curMatch();m.ga=ga;m.gb=gb;if(!(ga!==''&&gb!==''&&+ga===+gb))m.pen=null;renderBracket();}
-function renderKB(){
-  const m=curMatch();
-  document.getElementById('kbTitle').innerHTML=`${crest(m.a)}<span class="nm">${m.a}</span><span class="vs">VS</span><span class="nm">${m.b}</span>${crest(m.b)}`;
-  document.getElementById('kbDisplay').innerHTML=`<span class="d ${m.ga===''?'empty':''}">${m.ga===''?'–':m.ga}</span><span class="sep">:</span><span class="d ${m.gb===''?'empty':''}">${m.gb===''?'–':m.gb}</span>`;
-  const cur=m.ga!==''&&m.gb!==''?`${m.ga}-${m.gb}`:'';
-  document.getElementById('kbGrid').innerHTML=SCORELINES.map(s=>`<div class="kb-key ${s===cur?'on':''}" data-sl="${s}">${s.replace('-',' - ')}</div>`).join('');
-  const step=(side,val)=>`<div class="kb-key ${String(val)===(side==='a'?m.ga:m.gb)?'on':''}" data-step="${side}" data-v="${val}">${val}</div>`;
-  document.getElementById('kbStepA').innerHTML=[5,6,7,8,9].map(v=>step('a',v)).join('');
-  document.getElementById('kbStepB').innerHTML=[5,6,7,8,9].map(v=>step('b',v)).join('');
-  const tie=m.a&&m.b&&m.ga!==''&&m.gb!==''&&+m.ga===+m.gb;
-  document.getElementById('kbPens').innerHTML= tie?
-    `Empate · ¿quién pasa?<button class="pk ${m.pen===m.a?'on':''}" data-pen="${m.a}">${crest(m.a)}${m.a}</button><button class="pk ${m.pen===m.b?'on':''}" data-pen="${m.b}">${crest(m.b)}${m.b}</button>`:'';
-  document.getElementById('kbPrev').disabled=kb.i<=0;
-  document.getElementById('kbNext').disabled=kb.i>=matchesInRound().length-1;
-  // bind
-  document.querySelectorAll('#kbGrid .kb-key').forEach(k=>k.onclick=()=>{const[a,b]=k.dataset.sl.split('-');kbSet(a,b);});
-  document.querySelectorAll('[data-step]').forEach(k=>k.onclick=()=>{
-    const m=curMatch();const side=k.dataset.step, v=k.dataset.v;
-    if(side==='a')m.ga=v;else m.gb=v; if(!(m.ga!==''&&m.gb!==''&&+m.ga===+m.gb))m.pen=null; renderBracket();});
-  document.querySelectorAll('[data-pen]').forEach(k=>k.onclick=()=>{curMatch().pen=k.dataset.pen;renderBracket();});
-}
-document.getElementById('kbPrev').onclick=()=>{if(kb.i>0)openKB(kb.key,kb.i-1);};
-document.getElementById('kbNext').onclick=()=>{if(kb.i<matchesInRound().length-1)openKB(kb.key,kb.i+1);};
-document.getElementById('kbScrim').onclick=closeKB;
-
-/* ---------- RESUMEN ---------- */
-function loser(m){const w=winner(m);if(!w||!m.a||!m.b)return null;return w===m.a?m.b:m.a;}
-function teamCell(n){return n?`<div class="tc">${crest(n)}<span>${n}</span></div>`
-  :`<div class="tc empty"><div class="crest" style="background:#222a44">?</div><span>—</span></div>`;}
-function tgrid(arr,cols){return `<div class="tcgrid" style="grid-template-columns:repeat(${cols},1fr)">${arr.map(teamCell).join('')}</div>`;}
-function renderSummary(){
-  const b=state.bracket;
-  const champ  = b?winner(b.fn[0]):null;
-  const runner = b?loser(b.fn[0]):null;
-  const semis  = b?b.sf.map(loser):[null,null];
-  const quart  = b?b.qf.map(loser):[null,null,null,null];
-  const oct    = b?b.r16.map(loser):Array(8).fill(null);
-  const directos=state.order.slice(0,8), playoff=state.order.slice(8,24), fuera=state.order.slice(24,36);
-  document.getElementById('summary').innerHTML=`
-    <div class="card">
-      <h3><span class="dot" style="background:var(--gold)"></span>Tu cuadro</h3>
-      <div class="finalists">
-        <div class="fcard champ"><div class="ftrophy">🏆</div>${champ?crest(champ):'<div class="crest" style="background:#222a44">?</div>'}<div class="flbl">Campeón</div><div class="fnm">${champ||'—'}</div></div>
-        <div class="fcard sub">${runner?crest(runner):'<div class="crest" style="background:#222a44">?</div>'}<div class="flbl">Subcampeón</div><div class="fnm">${runner||'—'}</div></div>
-      </div>
-      <div class="sublabel"><span class="sl-dot" style="background:#cfd2e6"></span>Semifinalistas<span class="sl-n">2</span></div>
-      ${tgrid(semis,2)}
-      <div class="sublabel"><span class="sl-dot" style="background:#9aa0c4"></span>Cuartofinalistas<span class="sl-n">4</span></div>
-      ${tgrid(quart,4)}
-      <div class="sublabel"><span class="sl-dot" style="background:#6b7199"></span>Octavofinalistas<span class="sl-n">8</span></div>
-      ${tgrid(oct,4)}
-    </div>
-    <div class="card">
-      <h3><span class="dot" style="background:var(--dir)"></span>Clasificación de grupos</h3>
-      <div class="sublabel"><span class="sl-dot" style="background:var(--dir)"></span>Directos<span class="sl-n">1–8</span></div>
-      ${tgrid(directos,4)}
-      <div class="sublabel"><span class="sl-dot" style="background:var(--po)"></span>Playoff<span class="sl-n">9–24</span></div>
-      ${tgrid(playoff,4)}
-      <div class="sublabel"><span class="sl-dot" style="background:var(--out)"></span>Fuera<span class="sl-n">25–36</span></div>
-      ${tgrid(fuera,4)}
-    </div>`;
-}
-
-buildGroup();
 </script>
 </body>
 </html>
