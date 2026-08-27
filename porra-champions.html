@@ -4,6 +4,15 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <title>Porra Champions 26/27</title>
+<!-- PWA -->
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#070b18">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="G.H. Champions">
+<script>if('serviceWorker' in navigator){window.addEventListener('load',()=>navigator.serviceWorker.register('sw.js').catch(()=>{}));}</script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@300;400;500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -139,14 +148,24 @@
   .gtile .crest{width:40px;height:40px;font-size:15px;border-radius:11px;position:relative;z-index:1}
   .gtile .gsig{font-family:Oswald;font-weight:600;font-size:10px;letter-spacing:.04em;color:var(--muted);text-transform:uppercase;position:relative;z-index:1}
   /* arrastre: hueco de origen, casilla elegida y la que sigue al dedo */
-  .gt-ghost{opacity:.25}
-  .gt-chosen{opacity:1}
-  .gt-drag{box-shadow:0 14px 30px -8px rgba(0,0,0,.65);border-color:var(--gold)!important;opacity:1}
+  /* la que se queda en el hueco: apenas visible (gana a las demás clases) */
+  .gtile.gt-ghost{opacity:.16!important}
+  .gt-chosen{transform:none!important}
+  .gt-drag{transform:none!important}
+  /* la que sigue al dedo (clon en body): 100% nítida y con su propio fondo/tamaño */
+  .gt-fallback{opacity:1!important;transform:none!important;cursor:grabbing;z-index:99999;
+    width:80px;height:80px;background:var(--panel)!important;border:1px solid var(--gold)!important;border-radius:12px;
+    box-shadow:0 18px 40px -10px rgba(0,0,0,.85);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:5px;padding:9px 4px 7px}
   .gdiv{grid-column:1/-1;display:flex;align-items:center;gap:9px;padding:4px 2px 2px;user-select:none}
   .gdiv span{font-family:Oswald;font-weight:600;font-size:9.5px;letter-spacing:.12em;text-transform:uppercase;white-space:nowrap}
   .gdiv .ln{flex:1;height:1px}
   .gdiv.d-dir span{color:var(--dir)} .gdiv.d-dir .ln{background:linear-gradient(90deg,var(--dir),transparent)}
   .gdiv.d-out span{color:var(--out)} .gdiv.d-out .ln{background:linear-gradient(90deg,var(--out),transparent)}
+  /* resaltado de rivales (toque corto) */
+  .gtile.selrival{border-color:var(--cyan);box-shadow:0 0 0 2px rgba(116,228,255,.5)}
+  .gtile.rival{border-color:rgba(116,228,255,.6);box-shadow:0 0 0 2px rgba(116,228,255,.22)}
+  .gtile.rival::after,.gtile.selrival::after{content:"";position:absolute;inset:0;background:rgba(116,228,255,.08);pointer-events:none}
+  .ggrid.dimrivals .gtile:not(.rival):not(.selrival){opacity:.4}
   /* fichas de playoff (mismo look que grupos) */
   .gtile.sel{cursor:pointer}
   .gtile.info{cursor:default}
@@ -305,6 +324,63 @@
   .kb-pens .pk{font-family:Inter;font-size:12px;font-weight:600;padding:6px 12px;border-radius:9px;background:rgba(255,255,255,.05);border:1px solid var(--line2);color:var(--text);cursor:pointer;display:flex;align-items:center;gap:6px}
   .kb-pens .pk.on{background:var(--gold);color:#0a0e1c;border-color:var(--gold)}
   .kb-pens .pk .crest{width:16px;height:16px;font-size:9px}
+  /* ===== Eliminatorias: lienzo animado ===== */
+  .elim-screen{padding:0;overflow:hidden;display:flex}
+  .bwrap{flex:1;position:relative;overflow-x:auto;overflow-y:auto;scroll-behavior:smooth;-webkit-overflow-scrolling:touch}
+  .bwrap::-webkit-scrollbar{height:0}
+  .bsvg{position:absolute;top:0;left:0;pointer-events:none;z-index:1}
+  .bline{fill:none;stroke:var(--line2);stroke-width:2}
+  .bline.done{stroke:rgba(244,183,64,.5)}
+  .bcanvas{position:absolute;top:0;left:0;z-index:2}
+  .bcard{position:absolute;width:168px;height:64px;background:var(--panel);border:1px solid var(--line);border-radius:12px;
+    padding:0 9px;display:flex;flex-direction:column;justify-content:center;gap:5px;box-shadow:0 4px 14px -8px rgba(0,0,0,.6);
+    will-change:transform;overflow:hidden}
+  .bcard::before{content:"";position:absolute;left:0;top:0;bottom:0;width:3px;background:var(--faint)}
+  .bcard.decided::before{background:var(--gold)}
+  .bcard.playable{cursor:pointer}
+  .bcard.playable:active{border-color:var(--gold)}
+  .bcard.sel{border-color:var(--gold);box-shadow:0 0 0 2px rgba(244,183,64,.35),0 6px 18px -6px rgba(0,0,0,.7)}
+  .bcard.tbd{opacity:.55}
+  .brow{display:flex;align-items:center;gap:8px;font-size:13px}
+  .brow .crest{width:20px;height:20px;border-radius:6px;flex:0 0 auto;font-size:9px}
+  .brow .bnm{flex:1;min-width:0;font-family:Oswald;font-weight:600;letter-spacing:.02em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .brow .bg{font-family:Oswald;font-weight:700;font-size:14px;color:var(--muted);width:16px;text-align:center}
+  .brow.win .bnm{color:var(--text)} .brow.win .bg{color:var(--gold)}
+  .brow.lose{opacity:.5}
+  .brow.tbdrow .bnm{color:var(--faint);font-style:italic;font-weight:500}
+
+  /* ===== Panel marcador compacto ===== */
+  .kbpanel{position:absolute;right:12px;bottom:14px;z-index:20;width:210px;background:rgba(12,16,36,.55);
+    border:1px solid var(--line2);border-radius:16px;padding:10px 12px 12px;box-shadow:0 16px 40px -12px rgba(0,0,0,.8);
+    transform:translateY(150%);opacity:0;transition:transform .25s cubic-bezier(.2,.8,.3,1),opacity .2s;pointer-events:none}
+  .kbpanel.open{transform:translateY(0);opacity:1;pointer-events:auto}
+  .kbc-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:9px}
+  .kbc-rnd{font-family:Oswald;font-weight:600;font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--gold)}
+  .kbc-hintpen{font-family:Oswald;font-weight:600;font-size:9px;letter-spacing:.04em;text-transform:uppercase;color:var(--po);display:none}
+  .kbpanel.tie .kbc-hintpen{display:inline}
+  .kbc-x{background:transparent;border:none;color:var(--faint);font-size:17px;cursor:pointer;line-height:1;padding:0 2px}
+  .kbc-body{display:flex;align-items:center;justify-content:space-between;gap:6px}
+  .kbc-team{display:flex;flex-direction:column;align-items:center;gap:4px;width:52px}
+  .kbc-team .crestwrap{width:32px;height:32px}
+  .kbc-team .crest{width:32px;height:32px;border-radius:9px;font-size:11px;position:relative}
+  .kbpanel.tie .kbc-team .crestwrap{cursor:pointer}
+  .kbc-team.pass .crest{box-shadow:0 0 0 3px var(--gold)}
+  .kbc-team.pass .crest::after{content:"›";position:absolute;top:-9px;right:-6px;font-family:Oswald;font-weight:700;font-size:13px;color:var(--gold)}
+  .kbc-sg{font-family:Oswald;font-weight:600;font-size:9px;letter-spacing:.04em;color:var(--muted);text-transform:uppercase;
+    max-width:52px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .kbpanel.tie .kbc-team.pass .kbc-sg{color:var(--gold)}
+  .kbc-steppers{display:flex;flex-direction:column;gap:5px}
+  .kbc-row{display:flex;align-items:center;gap:7px;justify-content:center}
+  .kbc-btn{width:24px;height:24px;border-radius:8px;border:1px solid var(--line2);background:var(--panel2);color:var(--text);
+    font-family:Oswald;font-weight:700;font-size:15px;cursor:pointer;display:flex;align-items:center;justify-content:center;line-height:1}
+  .kbc-btn:active{background:var(--gold);color:#0a0e1c}
+  .kbc-goal{font-family:Oswald;font-weight:700;font-size:24px;min-width:26px;text-align:center;font-variant-numeric:tabular-nums}
+  .kbc-tbd{text-align:center;font-size:11px;color:var(--faint);font-style:italic;padding:16px 0}
+  .kbc-nav{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-top:11px;padding-top:9px;border-top:1px solid var(--line)}
+  .kbc-nav button{flex:1;font-family:Oswald;font-weight:600;font-size:11px;letter-spacing:.03em;text-transform:uppercase;
+    padding:8px 4px;border-radius:9px;border:1px solid var(--line2);background:var(--panel2);color:var(--text);cursor:pointer}
+  .kbc-nav button:active{background:var(--gold);color:#0a0e1c}
+  .kbc-nav button:disabled{opacity:.35;cursor:not-allowed}
 </style>
 </head>
 <body>
@@ -332,7 +408,7 @@
           <div class="rsub" data-goround="sf">S</div>
           <div class="rsub" data-goround="fn">F</div>
         </div></div>
-      <div class="pchip" data-go="6"><div class="pn">Fase 4</div><div class="pt">Resumen</div><div class="bar"></div></div>
+      <div class="pchip" data-go="3"><div class="pn">Fase 4</div><div class="pt">Resumen</div><div class="bar"></div></div>
     </div>
   </header>
 
@@ -362,11 +438,13 @@
         <div class="po-list" id="poList"></div>
       </section>
 
-      <!-- 2..5 · RONDAS (se generan) -->
-      <section class="screen" data-round="r16"></section>
-      <section class="screen" data-round="qf"></section>
-      <section class="screen" data-round="sf"></section>
-      <section class="screen" data-round="fn"></section>
+      <!-- 2 · ELIMINATORIAS (lienzo animado) -->
+      <section class="screen elim-screen">
+        <div class="bwrap" id="bwrap">
+          <svg class="bsvg" id="bsvg"></svg>
+          <div class="bcanvas" id="bcanvas"></div>
+        </div>
+      </section>
 
       <!-- 6 · RESUMEN -->
       <section class="screen">
@@ -397,23 +475,14 @@
     <a class="tab adminonly" href="admin.html" style="display:none"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M12 3v2M12 19v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M3 12h2M19 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg><span>Admin</span></a>
   </nav>
 
-  <!-- Teclado marcador -->
-  <div class="kb-scrim" id="kbScrim"></div>
-  <div class="kbsheet" id="kbsheet">
-    <div class="kb-grab"></div>
-    <div class="kb-head">
-      <button class="kb-nav" id="kbPrev">‹</button>
-      <div class="kb-title" id="kbTitle"></div>
-      <button class="kb-nav" id="kbNext">›</button>
+  <!-- Panel marcador compacto (eliminatorias) -->
+  <div class="kbpanel" id="kbPanel">
+    <div class="kbc-top"><span class="kbc-rnd" id="kbRnd">Octavos · 1/8</span><span class="kbc-hintpen">toca quién pasa</span><button class="kbc-x" id="kbClose">✕</button></div>
+    <div class="kbc-body" id="kbBody"></div>
+    <div class="kbc-nav">
+      <button id="kbPrevBtn">‹ Ant.</button>
+      <button id="kbNextBtn">Sig. ›</button>
     </div>
-    <div class="kb-display" id="kbDisplay"></div>
-    <div class="kb-grid" id="kbGrid"></div>
-    <div class="kb-steppers">
-      <div class="grp" id="kbStepA"></div>
-      <div class="dash">—</div>
-      <div class="grp" id="kbStepB"></div>
-    </div>
-    <div class="kb-pens" id="kbPens"></div>
   </div>
 
 </div></div>
@@ -480,9 +549,10 @@ const crest = name => {
   return `<div class="crest" style="background:${bg}">${abbr(name)}</div>`;
 };
 
-const N = 7;
-const ROUND_IDX = {r16:2, qf:3, sf:4, fn:5};
-const IDX_ROUND = {2:'r16',3:'qf',4:'sf',5:'fn'};
+const N = 4;   // grupos, playoff, eliminatorias(lienzo), resumen
+const RKEYS=['r16','qf','sf','fn'];
+const RLABEL={r16:'Octavos',qf:'Cuartos',sf:'Semis',fn:'Final'};
+const ROUND_IDX = {r16:2, qf:3, sf:4, fn:5};   // (referencia histórica; ya no son índices de pantalla)
 
 /* ---------- Navegación ---------- */
 let idx=0;
@@ -492,28 +562,36 @@ track.style.width=(N*100)+'%';
 screens.forEach(s=>{ s.style.width=(100/N)+'%'; s.addEventListener('scroll',onScroll); });
 function goTo(i){
   idx=Math.max(0,Math.min(N-1,i));
-  const inBracket = idx>=2&&idx<=5;
+  const inBracket = idx===2;
   if(kb.open && !inBracket) closeKB();
   track.style.transform=`translateX(-${idx*(100/N)}%)`;
-  const phase = idx===0?0:idx===1?1:idx===6?6:2;
-  document.querySelectorAll('.pchip').forEach(t=>t.classList.toggle('on',+t.dataset.go===phase));
-  phone.classList.toggle('show-rb', inBracket);
+  document.querySelectorAll('.pchip').forEach(t=>t.classList.toggle('on',+t.dataset.go===idx));
   updateHdrMin();
   if(idx===1) renderPlayoff();
   if(inBracket) ensureBracket();
-  if(idx===6) renderSummary();
+  if(idx===3) renderSummary();
   updateRoundBar();
   updateSaveBar();
 }
+function activeRound(){   // ronda "activa" según el scroll del lienzo (0..3)
+  if(!bwrap) return 0;
+  const max=bwrap.scrollWidth-bwrap.clientWidth;
+  if(max>0 && bwrap.scrollLeft>=max-2) return 3;   // al final del scroll → Final
+  return Math.max(0,Math.min(3, Math.round(bwrap.scrollLeft/BCOLW)));
+}
 function updateRoundBar(){
-  document.querySelectorAll('.pchip-elim .rsub').forEach(t=>{
-    const k=t.dataset.goround;
-    t.classList.toggle('cur', ROUND_IDX[k]===idx);
-    t.classList.toggle('done', ROUND_IDX[k]!==idx && state.bracket && complete(k) && state.bracket[k].every(m=>m.a));
+  const ar = idx===2 ? activeRound() : -1;
+  document.querySelectorAll('.pchip-elim .rsub').forEach((t,r)=>{
+    const k=t.dataset.goround, ri=RKEYS.indexOf(k);
+    t.classList.toggle('cur', ri===ar);
+    t.classList.toggle('done', state.bracket && complete(k) && state.bracket[k].every(m=>m.a));
   });
 }
 document.querySelectorAll('.pchip-elim .rsub').forEach(t=>t.addEventListener('click',e=>{
-  e.stopPropagation(); if(kb.open)closeKB(); goTo(ROUND_IDX[t.dataset.goround]);
+  e.stopPropagation();
+  if(idx!==2) goTo(2);
+  const r=RKEYS.indexOf(t.dataset.goround);
+  if(bwrap) bwrap.scrollTo({left:r*BCOLW, behavior:'smooth'});
 }));
 document.querySelectorAll('[data-go]').forEach(el=>el.addEventListener('click',()=>goTo(+el.dataset.go)));
 
@@ -521,23 +599,12 @@ document.querySelectorAll('[data-go]').forEach(el=>el.addEventListener('click',(
 function onScroll(e){ if(screens[idx]===e.target) updateHdrMin(); }
 function updateHdrMin(){
   const st=screens[idx]?screens[idx].scrollTop:0;
-  document.getElementById('phone').classList.toggle('hdr-min', st>6 || (idx>=2&&idx<=5));
+  document.getElementById('phone').classList.toggle('hdr-min', st>6 || idx===2);
 }
 
-/* swipe */
+/* swipe entre fases: eliminado. La navegación se hace por las pestañas (Fase 1/2/3/4).
+   El scroll lateral SOLO existe dentro del lienzo de la Fase 3 (nativo del navegador). */
 const vp=document.getElementById('viewport');
-let sx=0,sy=0,sw=false, dragging=false;
-vp.addEventListener('touchstart',e=>{
-  sx=e.touches[0].clientX;sy=e.touches[0].clientY;
-  // si el gesto empieza sobre una casilla arrastrable, no es swipe de pantalla
-  sw = !e.target.closest('.gtile');
-},{passive:true});
-vp.addEventListener('touchend',e=>{
-  if(!sw)return; sw=false;
-  if(dragging){ dragging=false; return; }   // por seguridad, nunca dejar la bandera pegada
-  const dx=e.changedTouches[0].clientX-sx, dy=e.changedTouches[0].clientY-sy;
-  if(Math.abs(dx)>55&&Math.abs(dx)>Math.abs(dy)*1.6) goTo(idx+(dx<0?1:-1));
-},{passive:true});
 
 /* ---------- GRUPOS ---------- */
 const groupList=document.getElementById('groupList');
@@ -561,11 +628,40 @@ function buildGroup(){
     if(tiles[24])groupList.insertBefore(dOUT,tiles[24]);
   }
   relayout();
-  Sortable.create(groupList,{animation:0,filter:'.gdiv',draggable:'.gtile',
-    ghostClass:'gt-ghost',chosenClass:'gt-chosen',dragClass:'gt-drag',
-    delayOnTouchOnly:true,delay:120,touchStartThreshold:6,disabled:!editableA(),
-    onStart:()=>{dragging=true;},
-    onEnd:()=>{relayout();markDirtyA();dragging=false;}});
+  // toque corto sobre una ficha → iluminar sus 8 rivales
+  groupList.querySelectorAll('.gtile').forEach(t=>{
+    t.addEventListener('click',()=>toggleRivals(t.dataset.team));
+  });
+  Sortable.create(groupList,{
+    animation:220, easing:'cubic-bezier(.2,.8,.3,1)',
+    filter:'.gdiv', draggable:'.gtile',
+    ghostClass:'gt-ghost', chosenClass:'gt-chosen', dragClass:'gt-drag',
+    forceFallback:true, fallbackClass:'gt-fallback', fallbackOnBody:true, fallbackTolerance:4,
+    delayOnTouchOnly:true, delay:90, touchStartThreshold:6,
+    disabled:!editableA(),
+    onStart:()=>clearRivals(),
+    onEnd:()=>{relayout();markDirtyA();}
+  });
+}
+// Resaltado de rivales de la fase liga
+function clearRivals(){
+  state.rivalSel=null;
+  if(groupList){ groupList.classList.remove('dimrivals');
+    groupList.querySelectorAll('.gtile.rival,.gtile.selrival').forEach(t=>t.classList.remove('rival','selrival')); }
+}
+function toggleRivals(name){
+  if(state.rivalSel===name){ clearRivals(); return; }   // segundo toque → quitar
+  clearRivals();
+  const slug=state.id[name];
+  const rivals=(state.rivals&&state.rivals[slug])||[];
+  if(!rivals.length) return;                              // sin datos → no hace nada
+  state.rivalSel=name;
+  const rivalNames=new Set(rivals.map(s=>state.nameBySlug[s]).filter(Boolean));
+  groupList.querySelectorAll('.gtile').forEach(t=>{
+    if(t.dataset.team===name) t.classList.add('selrival');
+    else if(rivalNames.has(t.dataset.team)) t.classList.add('rival');
+  });
+  groupList.classList.add('dimrivals');
 }
 
 /* ---------- PLAYOFF ---------- */
@@ -635,77 +731,156 @@ function propagate(){const b=state.bracket;
   b.fn[0].a=winner(b.sf[0]);b.fn[0].b=winner(b.sf[1]);clean(b.fn[0]);}
 function clean(m){if(m.a==null||m.b==null){m.ga='';m.gb='';m.pen=null;}}
 
-function matchCard(m,key,i){
-  const w=winner(m);
-  const side=(nm,g,other)=>{
-    if(!nm)return `<div class="side empty"><div class="crest" style="background:#222a44">?</div><div class="sn">Por definir</div><div class="sbox blank">–</div></div>`;
-    const pen = (m.a&&m.b&&m.ga!==''&&m.gb!==''&&+m.ga===+m.gb&&m.pen===nm)?'<span class="pentag">GANA</span>':'';
-    return `<div class="side ${w===nm?'win':''}">${crest(nm)}<div class="sn">${nm}</div>${pen}<div class="sbox ${g===''?'blank':''}">${g===''?'–':g}</div></div>`;
-  };
-  const tap = (m.a&&m.b)?'tappable':'';
-  return `<div class="match ${tap}" data-k="${key}" data-i="${i}"><div class="mno">${key.toUpperCase()}·${i+1}</div>${side(m.a,m.ga)}${side(m.b,m.gb)}</div>`;
+/* ---------- Lienzo del bracket ---------- */
+const bwrap=document.getElementById('bwrap');
+const bcanvas=document.getElementById('bcanvas');
+const bsvg=document.getElementById('bsvg');
+const BCW=168,BCH=64,BCGAP=50,BCOLW=BCW+BCGAP,BPADX=16,BPADY=10,BGAP=10;
+let bcards=[];
+
+function browHTML(nm,g,w){
+  if(!nm) return `<div class="brow tbdrow"><span class="crest" style="background:#222a44">?</span><span class="bnm">Por definir</span><span class="bg"></span></div>`;
+  const cls = w ? (w===nm?'win':'lose') : '';
+  return `<div class="brow ${cls}">${crest(nm)}<span class="bnm">${sig(nm)}</span><span class="bg">${g===''?'':g}</span></div>`;
 }
 function renderBracket(){
   if(!state.bracket)return;
   propagate();
-  ROUNDS.forEach(([key,label,n])=>{
-    const sc=screens[ROUND_IDX[key]];
-    const lead={r16:'8 cruces · los 8 directos contra los 8 del playoff.',qf:'Ganadores de octavos.',sf:'Ganadores de cuartos.',fn:'Un partido, un campeón.'}[key];
-    let html=`<div class="round-lead">${lead}</div>`;
-    html+=`<div class="bmatches">`+state.bracket[key].map((m,i)=>matchCard(m,key,i)).join('')+`</div>`;
-    if(key==='fn'){
-      const ch=winner(state.bracket.fn[0]);
-      html+=`<div class="champ-card"><div class="lbl">★ Tu campeón ★</div><div class="nm ${ch?'':'tbd'}">${ch||'Por decidir'}</div></div>`;
-    }
-    sc.innerHTML=html;
+  bcanvas.innerHTML=''; bcards=[];
+  RKEYS.forEach((key,r)=>{
+    const arr=[];
+    state.bracket[key].forEach((m,i)=>{
+      const w=winner(m), playable=!!(m.a&&m.b);
+      const card=document.createElement('div');
+      card.className='bcard'+(w?' decided':'')+(playable?' playable':'')+((!m.a&&!m.b)?' tbd':'');
+      card.style.left=(BPADX+r*BCOLW)+'px';
+      card.dataset.k=key; card.dataset.i=i;
+      card.innerHTML=browHTML(m.a,m.ga,w)+browHTML(m.b,m.gb,w);
+      if(playable) card.addEventListener('click',()=>openKB(key,i));
+      bcanvas.appendChild(card); arr.push(card);
+    });
+    bcards.push(arr);
   });
-  document.querySelectorAll('.match.tappable').forEach(mc=>mc.addEventListener('click',()=>openKB(mc.dataset.k,+mc.dataset.i)));
-  updateRoundBar();
-  if(kb.open){ renderKB(); const mc=document.querySelector(`.screen[data-round="${kb.key}"] .match[data-i="${kb.i}"]`); if(mc)mc.classList.add('active'); }
+  const wd=4*BCOLW+BPADX*2, ht=8*(BCH+BGAP)+BPADY*2;
+  bcanvas.style.width=wd+'px'; bcanvas.style.height=ht+'px';
+  bsvg.style.width=wd+'px'; bsvg.style.height=ht+'px';
+  layoutBracket();
+  if(kb.open) highlightCard();
 }
+function layoutBracket(){
+  if(!bcards.length) return;
+  const max=bwrap.scrollWidth-bwrap.clientWidth;
+  const active=(max>0 && bwrap.scrollLeft>=max-2) ? 3 : Math.min(bwrap.scrollLeft/BCOLW,3);
+  bcards[0].forEach((c,i)=>{const y=BPADY+i*(BCH+BGAP);c.style.transform=`translateY(${y}px)`;c.dataset.y=y;});
+  for(let r=1;r<4;r++){
+    const f=Math.max(0,Math.min(1,active-(r-1)));
+    bcards[r].forEach((c,i)=>{
+      const p1=parseFloat(bcards[r-1][i*2].dataset.y);
+      const p2=parseFloat(bcards[r-1][i*2+1].dataset.y);
+      const y=((p1+p2)/2)*(1-f)+(BPADY+i*(BCH+BGAP))*f;
+      c.style.transform=`translateY(${y}px)`;c.dataset.y=y;
+    });
+  }
+  drawLines();
+  updateRoundBar();
+}
+function drawLines(){
+  let s='';
+  for(let r=0;r<3;r++){
+    bcards[r].forEach((c,i)=>{
+      const nx=bcards[r+1][Math.floor(i/2)];
+      const y1=parseFloat(c.dataset.y)+BCH/2, x1=BPADX+r*BCOLW+BCW;
+      const y2=parseFloat(nx.dataset.y)+BCH/2, x2=BPADX+(r+1)*BCOLW;
+      const dx=(x2-x1)*0.5;
+      const done=winner(state.bracket[RKEYS[r]][i])?' done':'';
+      s+=`<path class="bline${done}" d="M ${x1} ${y1} C ${x1+dx} ${y1}, ${x2-dx} ${y2}, ${x2} ${y2}"/>`;
+    });
+  }
+  bsvg.innerHTML=s;
+}
+bwrap.addEventListener('scroll',()=>requestAnimationFrame(layoutBracket));
 
-/* ---------- Teclado marcador ---------- */
+/* ---------- Panel marcador compacto ---------- */
 const kb={open:false,key:null,i:0};
-const SCORELINES=["0-0","0-1","1-0","0-2","2-0","0-3","3-0","0-4","4-0","1-1","1-2","2-1","1-3","3-1","1-4","4-1","2-2","2-3","3-2","2-4","4-2","3-3","3-4","4-3","4-4"];
 const phone=document.getElementById('phone');
+const kbPanel=document.getElementById('kbPanel');
 function curMatch(){return state.bracket[kb.key][kb.i];}
-function matchesInRound(){return state.bracket[kb.key];}
+const SEQOFF={r16:0,qf:8,sf:12,fn:14};
+function seqIndex(key,i){return SEQOFF[key]+i;}
+function seqAt(n){ if(n<8)return['r16',n]; if(n<12)return['qf',n-8]; if(n<14)return['sf',n-12]; return['fn',n-14]; }
+
 function openKB(key,i){
   if(!editableB()) return;   // Ventana B cerrada → solo lectura
-  kb.open=true;kb.key=key;kb.i=i;
-  phone.classList.add('kb-open');
-  renderKB();
-  const mc=document.querySelector(`.screen[data-round="${key}"] .match[data-i="${i}"]`);
-  document.querySelectorAll('.match.active').forEach(x=>x.classList.remove('active'));
-  if(mc){mc.classList.add('active');setTimeout(()=>mc.scrollIntoView({behavior:'smooth',block:'start'}),80);}
+  kb.open=true; kb.key=key; kb.i=i;
+  kbPanel.classList.add('open');
+  const r=RKEYS.indexOf(key);
+  if(bwrap) bwrap.scrollTo({left:r*BCOLW, behavior:'smooth'});
+  renderPanel();
+  highlightCard();
 }
-function closeKB(){kb.open=false;phone.classList.remove('kb-open');
-  document.querySelectorAll('.match.active').forEach(x=>x.classList.remove('active'));updateHdrMin();}
-function kbSet(ga,gb){const m=curMatch();m.ga=ga;m.gb=gb;if(!(ga!==''&&gb!==''&&+ga===+gb))m.pen=null;markDirtyB();renderBracket();}
-function renderKB(){
+function openKBnav(key,i){   // navegación libre (aunque el partido esté por definir)
+  kb.key=key; kb.i=i;
+  const r=RKEYS.indexOf(key);
+  if(bwrap) bwrap.scrollTo({left:r*BCOLW, behavior:'smooth'});
+  renderPanel();
+  highlightCard();
+}
+function closeKB(){ kb.open=false; kbPanel.classList.remove('open');
+  document.querySelectorAll('.bcard.sel').forEach(c=>c.classList.remove('sel')); }
+function highlightCard(){
+  document.querySelectorAll('.bcard.sel').forEach(c=>c.classList.remove('sel'));
+  const col=bcards[RKEYS.indexOf(kb.key)];
+  const card=col && col[kb.i];
+  if(card) card.classList.add('sel');
+}
+function refreshTie(m){
+  const tie = m.a&&m.b&&m.ga!==''&&m.gb!==''&&+m.ga===+m.gb;
+  kbPanel.classList.toggle('tie',tie);
+  const ta=document.querySelector('.kbc-team[data-team="a"]'), tb=document.querySelector('.kbc-team[data-team="b"]');
+  if(ta) ta.classList.toggle('pass', tie && m.pen===m.a);
+  if(tb) tb.classList.toggle('pass', tie && m.pen===m.b);
+}
+function renderPanel(){
   const m=curMatch();
-  document.getElementById('kbTitle').innerHTML=`${crest(m.a)}<span class="nm">${m.a}</span><span class="vs">VS</span><span class="nm">${m.b}</span>${crest(m.b)}`;
-  document.getElementById('kbDisplay').innerHTML=`<span class="d ${m.ga===''?'empty':''}">${m.ga===''?'–':m.ga}</span><span class="sep">:</span><span class="d ${m.gb===''?'empty':''}">${m.gb===''?'–':m.gb}</span>`;
-  const cur=m.ga!==''&&m.gb!==''?`${m.ga}-${m.gb}`:'';
-  document.getElementById('kbGrid').innerHTML=SCORELINES.map(s=>`<div class="kb-key ${s===cur?'on':''}" data-sl="${s}">${s.replace('-',' - ')}</div>`).join('');
-  const step=(side,val)=>`<div class="kb-key ${String(val)===(side==='a'?m.ga:m.gb)?'on':''}" data-step="${side}" data-v="${val}">${val}</div>`;
-  document.getElementById('kbStepA').innerHTML=[5,6,7,8,9].map(v=>step('a',v)).join('');
-  document.getElementById('kbStepB').innerHTML=[5,6,7,8,9].map(v=>step('b',v)).join('');
-  const tie=m.a&&m.b&&m.ga!==''&&m.gb!==''&&+m.ga===+m.gb;
-  document.getElementById('kbPens').innerHTML= tie?
-    `Empate a 90' · ¿quién pasa?<button class="pk ${m.pen===m.a?'on':''}" data-pen="${m.a}">${crest(m.a)}${m.a}</button><button class="pk ${m.pen===m.b?'on':''}" data-pen="${m.b}">${crest(m.b)}${m.b}</button>`:'';
-  document.getElementById('kbPrev').disabled=kb.i<=0;
-  document.getElementById('kbNext').disabled=kb.i>=matchesInRound().length-1;
-  // bind
-  document.querySelectorAll('#kbGrid .kb-key').forEach(k=>k.onclick=()=>{const[a,b]=k.dataset.sl.split('-');kbSet(a,b);});
-  document.querySelectorAll('[data-step]').forEach(k=>k.onclick=()=>{
-    const m=curMatch();const side=k.dataset.step, v=k.dataset.v;
-    if(side==='a')m.ga=v;else m.gb=v; if(!(m.ga!==''&&m.gb!==''&&+m.ga===+m.gb))m.pen=null; markDirtyB(); renderBracket();});
-  document.querySelectorAll('[data-pen]').forEach(k=>k.onclick=()=>{curMatch().pen=k.dataset.pen;markDirtyB();renderBracket();});
+  document.getElementById('kbRnd').textContent=`${RLABEL[kb.key]} · ${kb.i+1}/${state.bracket[kb.key].length}`;
+  const body=document.getElementById('kbBody');
+  if(!m.a||!m.b){
+    body.innerHTML=`<div class="kbc-tbd">Partido por definir</div>`;
+  } else {
+    body.innerHTML=`
+      <div class="kbc-team" data-team="a"><div class="crestwrap" data-pen="${m.a}">${crest(m.a)}</div><span class="kbc-sg">${sig(m.a)}</span></div>
+      <div class="kbc-steppers">
+        <div class="kbc-row"><button class="kbc-btn" data-adj="a,-1">–</button><span class="kbc-goal" id="kbcA">${m.ga===''?'–':m.ga}</span><button class="kbc-btn" data-adj="a,1">+</button></div>
+        <div class="kbc-row"><button class="kbc-btn" data-adj="b,-1">–</button><span class="kbc-goal" id="kbcB">${m.gb===''?'–':m.gb}</span><button class="kbc-btn" data-adj="b,1">+</button></div>
+      </div>
+      <div class="kbc-team" data-team="b"><div class="crestwrap" data-pen="${m.b}">${crest(m.b)}</div><span class="kbc-sg">${sig(m.b)}</span></div>`;
+    body.querySelectorAll('[data-adj]').forEach(b=>b.onclick=()=>{const[s,d]=b.dataset.adj.split(',');adjustB(s,+d);});
+    body.querySelectorAll('.crestwrap[data-pen]').forEach(c=>c.onclick=()=>{
+      const mm=curMatch();
+      if(mm.ga!==''&&mm.gb!==''&&+mm.ga===+mm.gb){ mm.pen=c.dataset.pen; markDirtyB(); renderBracket(); refreshTie(mm); }
+    });
+  }
+  refreshTie(m);
+  const n=seqIndex(kb.key,kb.i);
+  document.getElementById('kbPrevBtn').disabled = n<=0;
+  document.getElementById('kbNextBtn').disabled = n>=14;
 }
-document.getElementById('kbPrev').onclick=()=>{if(kb.i>0)openKB(kb.key,kb.i-1);};
-document.getElementById('kbNext').onclick=()=>{if(kb.i<matchesInRound().length-1)openKB(kb.key,kb.i+1);};
-document.getElementById('kbScrim').onclick=closeKB;
+function adjustB(side,delta){
+  const m=curMatch();
+  let v = side==='a'?m.ga:m.gb;
+  if(delta>0){ v = (v==='') ? '0' : String(Math.min(99,+v+1)); }
+  else       { v = (v===''||v==='0') ? '' : String(+v-1); }
+  if(side==='a')m.ga=v; else m.gb=v;
+  if(!(m.ga!==''&&m.gb!==''&&+m.ga===+m.gb)) m.pen=null;
+  markDirtyB();
+  renderBracket();
+  const el=document.getElementById(side==='a'?'kbcA':'kbcB'); if(el)el.textContent=(v===''?'–':v);
+  refreshTie(m);
+  highlightCard();
+}
+document.getElementById('kbPrevBtn').onclick=()=>{const n=seqIndex(kb.key,kb.i); if(n>0){const[k,i]=seqAt(n-1); openKBnav(k,i);}};
+document.getElementById('kbNextBtn').onclick=()=>{const n=seqIndex(kb.key,kb.i); if(n<14){const[k,i]=seqAt(n+1); openKBnav(k,i);}};
+document.getElementById('kbClose').onclick=closeKB;
 
 /* ---------- RESUMEN ---------- */
 function loser(m){const w=winner(m);if(!w||!m.a||!m.b)return null;return w===m.a?m.b:m.a;}
@@ -722,7 +897,21 @@ function renderSummary(){
   const directos=state.order.slice(0,8), playoff=state.order.slice(8,24), fuera=state.order.slice(24,36);
   document.getElementById('summary').innerHTML=`
     <div class="card">
-      <h3><span class="dot" style="background:var(--gold)"></span>Tu cuadro</h3>
+      <h3><span class="dot" style="background:var(--dir)"></span>Fase 1 · Grupos</h3>
+      <div class="sublabel"><span class="sl-dot" style="background:var(--dir)"></span>Directos<span class="sl-n">1–8</span></div>
+      ${tgrid(directos,4)}
+      <div class="sublabel"><span class="sl-dot" style="background:var(--po)"></span>Playoff<span class="sl-n">9–24</span></div>
+      ${tgrid(playoff,4)}
+      <div class="sublabel"><span class="sl-dot" style="background:var(--out)"></span>Fuera<span class="sl-n">25–36</span></div>
+      ${tgrid(fuera,4)}
+    </div>
+    <div class="card">
+      <h3><span class="dot" style="background:var(--po)"></span>Fase 2 · Playoff</h3>
+      <div class="sublabel"><span class="sl-dot" style="background:var(--po)"></span>Elegidos para octavos<span class="sl-n">${state.advance.length}/8</span></div>
+      ${tgrid(state.advance.length?state.advance:Array(8).fill(null),4)}
+    </div>
+    <div class="card">
+      <h3><span class="dot" style="background:var(--gold)"></span>Fase 3 · Eliminatorias</h3>
       <div class="finalists">
         <div class="fcard champ"><div class="ftrophy">🏆</div>${champ?crest(champ):'<div class="crest" style="background:#222a44">?</div>'}<div class="flbl">Campeón</div><div class="fnm">${champ||'—'}</div></div>
         <div class="fcard sub">${runner?crest(runner):'<div class="crest" style="background:#222a44">?</div>'}<div class="flbl">Subcampeón</div><div class="fnm">${runner||'—'}</div></div>
@@ -733,15 +922,6 @@ function renderSummary(){
       ${tgrid(quart,4)}
       <div class="sublabel"><span class="sl-dot" style="background:#6b7199"></span>Octavofinalistas<span class="sl-n">8</span></div>
       ${tgrid(oct,4)}
-    </div>
-    <div class="card">
-      <h3><span class="dot" style="background:var(--dir)"></span>Clasificación de grupos</h3>
-      <div class="sublabel"><span class="sl-dot" style="background:var(--dir)"></span>Directos<span class="sl-n">1–8</span></div>
-      ${tgrid(directos,4)}
-      <div class="sublabel"><span class="sl-dot" style="background:var(--po)"></span>Playoff<span class="sl-n">9–24</span></div>
-      ${tgrid(playoff,4)}
-      <div class="sublabel"><span class="sl-dot" style="background:var(--out)"></span>Fuera<span class="sl-n">25–36</span></div>
-      ${tgrid(fuera,4)}
     </div>`;
 }
 
@@ -753,7 +933,7 @@ function markDirtyB(){ if(!editableB()) return; state.dirtyB = true; updateSaveB
 
 const saveBar = document.getElementById('saveBar');
 function updateSaveBar(){
-  const onA = (idx===0 || idx===1), onB = (idx>=2 && idx<=5);
+  const onA = (idx===0 || idx===1), onB = (idx===2);
   saveBar.classList.toggle('show', onA || onB);
   if(!(onA || onB)) return;
   saveBar.classList.remove('dirty','saved','locked','busy');
@@ -764,7 +944,7 @@ function updateSaveBar(){
   if(dirty){ saveBar.classList.add('dirty'); saveBar.textContent='Guardar cambios'; }
   else     { saveBar.classList.add('saved'); saveBar.textContent='Guardado ✓'; }
 }
-function onSaveClick(){ if(idx===0 || idx===1) saveVentanaA(); else if(idx>=2 && idx<=5) saveVentanaB(); }
+function onSaveClick(){ if(idx===0 || idx===1) saveVentanaA(); else if(idx===2) saveVentanaB(); }
 
 function buildBracketReal(rows){
   const key = r => ({R16:'r16',QF:'qf',SF:'sf',F:'fn'})[r];
@@ -882,6 +1062,14 @@ async function boot(){
     if(error) throw error;
     if(data && data.length) loadTeams(data.map(e=>[e.nombre, e.color||'#334', e.id + '.svg', e.sigla]));
   }catch(e){ console.warn('Equipos de BD no disponibles; uso los de reserva.', e); }
+
+  // enfrentamientos de la fase liga (rivales de cada equipo, por slug)
+  state.rivals = {};
+  try{
+    const { data, error } = await sb.from('enfrentamientos_grupos').select('equipo_id,rival_id');
+    if(error) throw error;
+    (data||[]).forEach(r=>{ (state.rivals[r.equipo_id] ||= []).push(r.rival_id); });
+  }catch(e){ console.warn('enfrentamientos_grupos no disponible; sin resaltado de rivales.', e); }
 
   // ¿estado de las ventanas?
   try{
