@@ -6,7 +6,7 @@
      (datos frescos, login intacto).
    - Al publicar una versión nueva, sube el número de CACHE y se limpia lo viejo.
    ============================================================================ */
-const CACHE = 'ghc-2026-v1';
+const CACHE = 'ghc-2026-v3';
 
 // Cascarón mínimo. Rutas RELATIVAS (GitHub Pages sirve el repo en un subdirectorio).
 const SHELL = [
@@ -16,6 +16,7 @@ const SHELL = [
   './porra-champions.html',
   './admin.html',
   './resultados.html',
+  './ayuda.html',
   './puntuacion.js',
   './manifest.json',
   './icon-192.png',
