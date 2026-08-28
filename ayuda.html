@@ -1,0 +1,259 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Porra Champions · Cómo funciona</title>
+<!-- PWA -->
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#070b18">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="G.H. Champions">
+<script>if('serviceWorker' in navigator){window.addEventListener('load',()=>navigator.serviceWorker.register('sw.js').catch(()=>{}));}</script>
+<link href="https://fonts.googleapis.com/css2?family=Oswald:wght@400;500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#070b18; --bg2:#0b1024; --panel:#121a34; --panel2:#19224a;
+    --line:rgba(255,255,255,.09); --line2:rgba(255,255,255,.16);
+    --text:#eef1fb; --muted:#8890b4; --faint:#5a628a;
+    --gold:#f4b740; --gold-dim:#b9871f; --cyan:#74e4ff;
+    --dir:#37d67a; --po:#ff9f43; --out:#f0555f;
+  }
+  *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+  html,body{height:100%}
+  body{background:radial-gradient(120% 40% at 50% -5%,rgba(116,228,255,.08),transparent 60%),linear-gradient(180deg,var(--bg2),var(--bg) 45%);
+    color:var(--text);font-family:Inter,system-ui,sans-serif;min-height:100vh;display:flex;flex-direction:column}
+  .wrap{flex:1;max-width:640px;margin:0 auto;width:100%;padding:16px 16px 96px}
+
+  /* cabecera */
+  header.top{display:flex;align-items:center;gap:10px;padding:6px 2px 14px}
+  .star{width:30px;height:30px;flex:0 0 auto}
+  .htitle{font-family:Oswald;font-weight:700;font-size:17px;text-transform:uppercase;letter-spacing:.02em}
+  .htitle b{color:var(--gold)}
+  .kicker{display:block;font-size:9.5px;letter-spacing:.22em;color:var(--cyan);font-weight:600}
+
+  .hero{background:linear-gradient(160deg,var(--panel2),var(--panel));border:1px solid var(--line2);border-radius:20px;
+    padding:22px 20px;text-align:center;margin-bottom:20px}
+  .hero h1{font-family:Oswald;font-weight:700;font-size:26px;text-transform:uppercase;line-height:1.1}
+  .hero h1 b{color:var(--gold)}
+  .hero p{color:var(--muted);font-size:14px;margin-top:8px;line-height:1.5}
+
+  /* índice */
+  .toc{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:24px}
+  .toc a{display:flex;align-items:center;gap:9px;background:var(--panel);border:1px solid var(--line);border-radius:12px;
+    padding:11px 12px;color:var(--text);text-decoration:none;font-family:Oswald;font-weight:600;font-size:12.5px;letter-spacing:.02em}
+  .toc a .n{width:22px;height:22px;flex:0 0 auto;border-radius:7px;background:var(--panel2);color:var(--gold);
+    display:flex;align-items:center;justify-content:center;font-size:12px}
+
+  section{margin-bottom:30px;scroll-margin-top:14px}
+  .sec-head{display:flex;align-items:center;gap:10px;margin-bottom:6px}
+  .sec-num{width:30px;height:30px;flex:0 0 auto;border-radius:9px;background:linear-gradient(180deg,var(--gold),var(--gold-dim));
+    color:#150f00;font-family:Oswald;font-weight:700;font-size:15px;display:flex;align-items:center;justify-content:center}
+  .sec-head h2{font-family:Oswald;font-weight:700;font-size:19px;text-transform:uppercase;letter-spacing:.02em}
+  .sec-tag{font-family:Oswald;font-weight:600;font-size:10px;letter-spacing:.06em;text-transform:uppercase;
+    padding:3px 9px;border-radius:20px;margin-left:auto}
+  .t-dir{background:rgba(55,214,122,.15);color:var(--dir)}
+  .t-po{background:rgba(255,159,67,.15);color:var(--po)}
+  .t-gold{background:rgba(244,183,64,.15);color:var(--gold)}
+  .t-cyan{background:rgba(116,228,255,.15);color:var(--cyan)}
+
+  section > p{color:var(--muted);font-size:14.5px;line-height:1.6;margin:8px 0}
+  section > p b{color:var(--text)}
+  .lead{color:var(--text)!important;font-size:15px}
+
+  /* tarjetas de imagen */
+  figure{margin:14px 0;border:1px solid var(--line);border-radius:16px;overflow:hidden;background:var(--panel)}
+  figure img{display:block;width:100%;height:auto}
+  figure figcaption{padding:10px 14px;font-size:12.5px;color:var(--muted);border-top:1px solid var(--line);background:var(--bg2)}
+  figure figcaption b{color:var(--gold);font-weight:600}
+  .imgrow{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+  .imgrow figure{margin:14px 0 0}
+
+  ul.tips{list-style:none;margin:12px 0;display:flex;flex-direction:column;gap:8px}
+  ul.tips li{position:relative;padding:10px 12px 10px 38px;background:var(--panel);border:1px solid var(--line);
+    border-radius:12px;font-size:14px;color:var(--text);line-height:1.5}
+  ul.tips li::before{content:"✓";position:absolute;left:12px;top:10px;color:var(--gold);font-weight:700}
+  ul.tips li b{color:var(--gold);font-weight:600}
+
+  .callout{display:flex;gap:11px;background:rgba(116,228,255,.06);border:1px solid rgba(116,228,255,.22);
+    border-radius:14px;padding:13px 15px;margin:14px 0;font-size:13.5px;line-height:1.55;color:var(--text)}
+  .callout .ic{flex:0 0 auto;font-size:17px}
+  .callout.warn{background:rgba(244,183,64,.06);border-color:rgba(244,183,64,.28)}
+
+  .points{display:flex;flex-wrap:wrap;gap:7px;margin:12px 0}
+  .points span{font-family:Oswald;font-weight:600;font-size:12px;padding:5px 11px;border-radius:20px;
+    background:var(--panel2);border:1px solid var(--line2)}
+  .points span b{color:var(--gold)}
+
+  .zonebar{display:flex;gap:6px;margin:12px 0}
+  .zonebar div{flex:1;text-align:center;font-family:Oswald;font-weight:600;font-size:11px;letter-spacing:.04em;
+    text-transform:uppercase;padding:8px 4px;border-radius:9px}
+  .z-dir{background:rgba(55,214,122,.13);color:var(--dir);border:1px solid rgba(55,214,122,.3)}
+  .z-po{background:rgba(255,159,67,.13);color:var(--po);border:1px solid rgba(255,159,67,.3)}
+  .z-out{background:rgba(240,85,95,.13);color:var(--out);border:1px solid rgba(240,85,95,.3)}
+
+  .divi{height:1px;background:var(--line);margin:26px 0}
+
+  .cta{display:block;text-align:center;background:linear-gradient(180deg,var(--gold),var(--gold-dim));color:#150f00;
+    font-family:Oswald;font-weight:700;font-size:15px;letter-spacing:.03em;text-transform:uppercase;text-decoration:none;
+    padding:15px;border-radius:14px;margin-top:20px}
+
+  /* footer común */
+  nav.tabbar{position:fixed;bottom:0;left:0;right:0;height:66px;background:rgba(9,13,28,.94);backdrop-filter:blur(12px);
+    border-top:1px solid var(--line);display:flex;z-index:40}
+  nav.tabbar a{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;
+    color:var(--faint);text-decoration:none;font-family:Oswald;font-weight:600;font-size:10.5px;letter-spacing:.03em;text-transform:uppercase}
+  nav.tabbar a svg{width:22px;height:22px}
+  nav.tabbar a.on{color:var(--gold)}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="top">
+    <svg class="star" viewBox="0 0 40 40" fill="none"><circle cx="20" cy="20" r="18" fill="#0e1530" stroke="#2a355f"/><path d="M20 7l2.6 5.3 5.9.9-4.3 4.1 1 5.8L20 26l-5.2 2.7 1-5.8-4.3-4.1 5.9-.9z" fill="#f4b740"/></svg>
+    <div><span class="kicker">Liga de Campeones · 2026/27</span><div class="htitle">Porra <b>Champions</b> · Guía</div></div>
+  </header>
+
+  <div class="hero">
+    <h1>¿Cómo <b>funciona</b>?</h1>
+    <p>Ordena, elige y pronostica cómo crees que irá la Champions. Cuantos más aciertos, más puntos. Gana quien más sume al final del torneo. Aquí tienes todo explicado paso a paso.</p>
+  </div>
+
+  <nav class="toc">
+    <a href="#c1"><span class="n">1</span>Crea tu cuenta</a>
+    <a href="#c2"><span class="n">2</span>Cómo se juega</a>
+    <a href="#c3"><span class="n">3</span>Fase 1 · Grupos</a>
+    <a href="#c4"><span class="n">4</span>Ver rivales</a>
+    <a href="#c5"><span class="n">5</span>Fase 2 · Playoff</a>
+    <a href="#c6"><span class="n">6</span>Guardar</a>
+    <a href="#c7"><span class="n">7</span>Fase 3 · Eliminatorias</a>
+    <a href="#c8"><span class="n">8</span>Fase 4 · Resumen</a>
+    <a href="#c9"><span class="n">9</span>Clasificación</a>
+    <a href="#c10"><span class="n">10</span>Instala la app</a>
+  </nav>
+
+  <!-- 1 -->
+  <section id="c1">
+    <div class="sec-head"><div class="sec-num">1</div><h2>Crea tu cuenta</h2></div>
+    <p class="lead">Entra en la web y pulsa <b>Crear cuenta</b>. Solo necesitas un nombre, un email y una contraseña.</p>
+    <p>Si ya tienes cuenta, usa <b>Entrar</b> con tu email y contraseña. Tus pronósticos quedan guardados y <b>solo tú puedes editarlos</b>.</p>
+    <div class="imgrow">
+      <figure><img src="ayuda-img/01-crear-cuenta.jpeg" alt="Crear cuenta"><figcaption><b>Crear cuenta</b> · nombre, email y contraseña</figcaption></figure>
+      <figure><img src="ayuda-img/02-login.jpeg" alt="Entrar"><figcaption><b>Entrar</b> · si ya estás registrado</figcaption></figure>
+    </div>
+  </section>
+
+  <!-- 2 -->
+  <section id="c2">
+    <div class="sec-head"><div class="sec-num">2</div><h2>Cómo se juega</h2></div>
+    <p class="lead">La porra tiene <b>4 fases</b>, que se corresponden con el torneo real:</p>
+    <ul class="tips">
+      <li><b>Fase 1 · Grupos:</b> ordenas los 36 equipos del 1º al 36º según cómo crees que quedarán en la liga.</li>
+      <li><b>Fase 2 · Playoff:</b> eliges qué 8 equipos (de los puestos 9º a 24º) pasan a octavos.</li>
+      <li><b>Fase 3 · Eliminatorias:</b> pronosticas los cruces desde octavos hasta la final.</li>
+      <li><b>Fase 4 · Resumen:</b> un repaso de todo tu pronóstico antes de dejarlo listo.</li>
+    </ul>
+    <div class="callout"><span class="ic">⏱️</span><div>Hay <b>dos momentos</b> para apostar: primero <b>Grupos + Playoff</b>. Más adelante, cuando se conozcan los cruces reales de octavos, se abre la ventana de <b>Eliminatorias</b>.</div></div>
+    <figure><img src="ayuda-img/14-home.jpeg" alt="Inicio"><figcaption>En el <b>inicio</b> ves tus puntos por fase, el líder y qué ventanas están abiertas.</figcaption></figure>
+  </section>
+
+  <!-- 3 -->
+  <section id="c3">
+    <div class="sec-head"><div class="sec-num">3</div><h2>Fase 1 · Grupos</h2><span class="sec-tag t-dir">Ordenar</span></div>
+    <p class="lead"><b>Arrastra</b> los equipos para ordenarlos del 1º al 36º. Mantén pulsado uno y llévalo a su sitio.</p>
+    <div class="zonebar"><div class="z-dir">1–8 Directos</div><div class="z-po">9–24 Playoff</div><div class="z-out">25–36 Fuera</div></div>
+    <p>El color de cada ficha te indica su zona: <b style="color:var(--dir)">verde</b> = pasa directo a octavos, <b style="color:var(--po)">naranja</b> = juega el playoff, <b style="color:var(--out)">rojo</b> = queda eliminado. Los separadores marcan los cortes.</p>
+    <div class="imgrow">
+      <figure><img src="ayuda-img/03-grupos.jpeg" alt="Grupos"><figcaption>Ordena los 36 arrastrando</figcaption></figure>
+      <figure><img src="ayuda-img/06-grupos-arrastre.jpeg" alt="Arrastre"><figcaption>Arrastra una ficha a su puesto</figcaption></figure>
+    </div>
+    <figure><img src="ayuda-img/04-grupos-zonas.jpeg" alt="Zonas"><figcaption>Los <b>separadores de color</b> marcan directos, playoff y eliminados.</figcaption></figure>
+    <div class="points"><span><b>+3</b> por acertar la zona</span><span><b>+5</b> extra por el puesto exacto</span></div>
+  </section>
+
+  <!-- 4 -->
+  <section id="c4">
+    <div class="sec-head"><div class="sec-num">4</div><h2>Ver los rivales</h2><span class="sec-tag t-cyan">Truco</span></div>
+    <p class="lead">Da un <b>toque corto</b> a cualquier equipo y se <b>iluminan sus 8 rivales</b> de la fase liga.</p>
+    <p>Así te haces una idea de lo difícil que tiene el calendario y decides mejor en qué puesto colocarlo. Toca de nuevo para quitar el resaltado.</p>
+    <figure><img src="ayuda-img/05-grupos-rivales.jpeg" alt="Rivales"><figcaption>Al tocar un equipo, sus <b>8 rivales</b> se resaltan en azul.</figcaption></figure>
+    <div class="callout"><span class="ic">💡</span><div><b>Toque corto</b> = ver rivales. <b>Mantener y mover</b> = arrastrar para ordenar. ¡No se pisan!</div></div>
+  </section>
+
+  <!-- 5 -->
+  <section id="c5">
+    <div class="sec-head"><div class="sec-num">5</div><h2>Fase 2 · Playoff</h2><span class="sec-tag t-po">Elegir 8</span></div>
+    <p class="lead">De los equipos que colocaste en <b>puestos 9º a 24º</b>, elige los <b>8 que crees que pasarán</b> el playoff a octavos.</p>
+    <p>Toca cada equipo para marcarlo (aparece un check dorado). El contador te muestra cuántos llevas: <b>X / 8</b>. Al llegar a 8, los demás se atenúan.</p>
+    <figure><img src="ayuda-img/08-playoff.jpeg" alt="Playoff"><figcaption>Marca tus <b>8</b> · arriba ves los 8 que ya están clasificados directos.</figcaption></figure>
+    <div class="points"><span><b>+9</b> por cada equipo acertado que pasa</span></div>
+  </section>
+
+  <!-- 6 -->
+  <section id="c6">
+    <div class="sec-head"><div class="sec-num">6</div><h2>Guarda tus cambios</h2></div>
+    <p class="lead">Cuando termines, pulsa <b>Guardar cambios</b> (arriba a la derecha). Verás <b>Guardado ✓</b> cuando esté todo bien.</p>
+    <div class="callout warn"><span class="ic">⚠️</span><div>Si no guardas, tus cambios no cuentan. El botón te avisa cuando tienes algo pendiente de guardar.</div></div>
+    <figure><img src="ayuda-img/07-guardado.jpeg" alt="Guardado"><figcaption>El botón cambia a <b>Guardado ✓</b> al guardar correctamente.</figcaption></figure>
+  </section>
+
+  <!-- 7 -->
+  <section id="c7">
+    <div class="sec-head"><div class="sec-num">7</div><h2>Fase 3 · Eliminatorias</h2><span class="sec-tag t-gold">Cuadro</span></div>
+    <p class="lead">Cuando se abre esta fase, el organizador carga los <b>cruces reales de octavos</b> (los del sorteo). A partir de ahí, tú pronosticas.</p>
+    <p><b>Desliza el cuadro</b> a los lados para avanzar de ronda (Octavos → Cuartos → Semifinales → Final) y ve pronosticando cada enfrentamiento según se va rellenando. Tus ganadores <b>suben solos</b> a la ronda siguiente.</p>
+    <figure><img src="ayuda-img/09-elim-octavos.jpeg" alt="Octavos"><figcaption>Los <b>octavos</b> ya cargados con los equipos reales.</figcaption></figure>
+    <p>Toca un partido para abrir el <b>marcador</b>: ajusta los goles con <b>+ / –</b>. Si queda empate, toca el escudo del equipo que <b>pasa</b> (se marca con un aro dorado). Usa <b>Ant. / Sig.</b> para recorrer todos los partidos.</p>
+    <div class="imgrow">
+      <figure><img src="ayuda-img/10-elim-panel.jpeg" alt="Marcador"><figcaption>Marcador con <b>+/–</b> y "quién pasa" en empate</figcaption></figure>
+      <figure><img src="ayuda-img/11-elim-arbol.jpeg" alt="Árbol"><figcaption>El cuadro avanza hacia el <b>campeón</b></figcaption></figure>
+    </div>
+    <div class="points"><span><b>+4</b> ganador</span><span><b>+5</b> emparejamiento</span><span><b>+9</b> resultado exacto</span></div>
+    <div class="callout"><span class="ic">🔒</span><div>Si ves <b>"Solo lectura"</b>, la ventana de eliminatorias aún no está abierta: podrás pronosticar cuando el organizador cargue los octavos.</div></div>
+  </section>
+
+  <!-- 8 -->
+  <section id="c8">
+    <div class="sec-head"><div class="sec-num">8</div><h2>Fase 4 · Resumen</h2></div>
+    <p class="lead">Un repaso completo de tu pronóstico: tu orden de grupos, tus 8 del playoff y tu cuadro de eliminatorias.</p>
+    <p>Úsalo para revisar que todo está como quieres antes de dejarlo cerrado.</p>
+    <figure><img src="ayuda-img/12-resumen.jpeg" alt="Resumen"><figcaption>Tu pronóstico completo, fase por fase.</figcaption></figure>
+  </section>
+
+  <!-- 9 -->
+  <section id="c9">
+    <div class="sec-head"><div class="sec-num">9</div><h2>La clasificación</h2></div>
+    <p class="lead">En <b>Clasificación</b> ves quién va ganando y el desglose de puntos de cada jugador, fase por fase.</p>
+    <p>Las pestañas <b>Grupos · Playoff · Eliminatorias · Posición final</b> te muestran el detalle de aciertos de todos. Tu columna aparece resaltada.</p>
+    <figure><img src="ayuda-img/13-clasificacion.jpeg" alt="Clasificación"><figcaption>Tabla comparativa con el desglose de puntos.</figcaption></figure>
+  </section>
+
+  <!-- 10 -->
+  <section id="c10">
+    <div class="sec-head"><div class="sec-num">10</div><h2>Instala la app</h2><span class="sec-tag t-gold">PWA</span></div>
+    <p class="lead">Puedes instalar la porra como una <b>app</b> en tu móvil: se abre a pantalla completa y con su propio icono.</p>
+    <p><b>En Android (Chrome):</b> abre el menú <b>⋮</b> → <b>Instalar y crear acceso directo</b> → <b>Instalar</b>. Aparecerá su icono en tu pantalla de inicio.</p>
+    <div class="imgrow">
+      <figure><img src="ayuda-img/15-pwa-menu.jpeg" alt="Menú navegador"><figcaption>Menú <b>⋮</b> → Instalar</figcaption></figure>
+      <figure><img src="ayuda-img/16-pwa-instalar.jpeg" alt="Instalar"><figcaption>Pulsa <b>Instalar</b></figcaption></figure>
+    </div>
+    <figure><img src="ayuda-img/17-pwa-icono.jpeg" alt="Icono instalado"><figcaption>Listo: la app <b>G.H. Champions</b> en tu pantalla de inicio.</figcaption></figure>
+    <div class="callout"><span class="ic">🍎</span><div><b>En iPhone (Safari):</b> pulsa el botón <b>Compartir</b> y luego <b>Añadir a pantalla de inicio</b>.</div></div>
+  </section>
+
+  <div class="divi"></div>
+  <p style="text-align:center;color:var(--muted);font-size:14px">¿Todo claro? ¡Pues a por la porra!</p>
+  <a class="cta" href="porra-champions.html">Ir a mi pronóstico →</a>
+</div>
+
+<nav class="tabbar">
+  <a href="index.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11l9-7 9 7"/><path d="M5 10v10h14V10"/></svg><span>Home</span></a>
+  <a href="porra-champions.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="6" y="4" width="12" height="16" rx="2"/><path d="M9.5 4h5v2.5h-5z"/><path d="M9 11h6M9 15h4"/></svg><span>Mi pronóstico</span></a>
+  <a href="resultados.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 4h10v4a5 5 0 01-10 0z"/><path d="M7 6H4v1.5a3 3 0 003 3M17 6h3v1.5a3 3 0 01-3 3"/><path d="M9.5 20h5M12 14v6"/></svg><span>Clasificación</span></a>
+  <a class="on" href="ayuda.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M9.5 9a2.5 2.5 0 015 0c0 1.7-2.5 2-2.5 4"/><path d="M12 17h.01"/></svg><span>Ayuda</span></a>
+</nav>
+</body>
+</html>
