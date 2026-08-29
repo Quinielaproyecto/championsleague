@@ -419,7 +419,7 @@
       <section class="screen">
         <div class="shead">
           <div><h2>Fase de grupos</h2><p>Ordena los 36 arrastrando. Tu posición final para cada equipo.</p></div>
-          <div class="legend"><div class="lg"><b>+3</b> rango</div><div class="lg"><b>+5</b> puesto</div></div>
+          <div class="legend"><div class="lg"><b id="lg-rango">+3</b> rango</div><div class="lg"><b id="lg-puesto">+5</b> puesto</div></div>
         </div>
         <div class="list" id="groupList"></div>
       </section>
@@ -428,7 +428,7 @@
       <section class="screen">
         <div class="shead">
           <div><h2>Fase de playoff</h2><p>Elige qué 8 del playoff se clasifican a octavos.</p></div>
-          <div class="legend"><div class="lg"><b>+9</b> por equipo</div></div>
+          <div class="legend"><div class="lg"><b id="lg-poff">+9</b> por equipo</div></div>
         </div>
         <div class="qual-block">
           <div class="qh">🔒 <b>Ya clasificados · 1–8</b></div>
@@ -453,12 +453,12 @@
         <div class="card">
           <h3><span class="dot" style="background:var(--gold)"></span>Cómo se puntúa</h3>
           <div class="scoring">
-            <div class="sp">+3</div><div class="sd">Rango correcto en grupos (1–8 / 9–24 / 25–36)</div>
-            <div class="sp">+5</div><div class="sd">Puesto exacto en grupos</div>
-            <div class="sp">+9</div><div class="sd">Equipo que pasa el playoff</div>
-            <div class="sp">+4</div><div class="sd">Ganador/perdedor de un cruce (90')</div>
-            <div class="sp">+5</div><div class="sd">Emparejamiento (cuartos, semis, final)</div>
-            <div class="sp">+9</div><div class="sd">Resultado exacto de un cruce</div>
+            <div class="sp" id="sc-rango">+3</div><div class="sd">Rango correcto en grupos (1–8 / 9–24 / 25–36)</div>
+            <div class="sp" id="sc-puesto">+5</div><div class="sd">Puesto exacto en grupos</div>
+            <div class="sp" id="sc-poff">+9</div><div class="sd">Equipo que pasa el playoff</div>
+            <div class="sp" id="sc-gana">+4</div><div class="sd">Ganador/perdedor de un cruce (90')</div>
+            <div class="sp" id="sc-emp">+5</div><div class="sd">Emparejamiento (cuartos, semis, final)</div>
+            <div class="sp" id="sc-exac">+9</div><div class="sd">Resultado exacto de un cruce</div>
           </div>
         </div>
       </section>
@@ -735,7 +735,7 @@ function clean(m){if(m.a==null||m.b==null){m.ga='';m.gb='';m.pen=null;}}
 const bwrap=document.getElementById('bwrap');
 const bcanvas=document.getElementById('bcanvas');
 const bsvg=document.getElementById('bsvg');
-const BCW=168,BCH=64,BCGAP=50,BCOLW=BCW+BCGAP,BPADX=16,BPADY=10,BGAP=10;
+const BCW=168,BCH=64,BCGAP=50,BCOLW=BCW+BCGAP,BPADX=16,BPADY=46,BGAP=10;
 let bcards=[];
 
 function browHTML(nm,g,w){
@@ -926,8 +926,17 @@ function renderSummary(){
 }
 
 /* ---------- Guardado / carga · Ventanas A (Grupos+Playoff) y B (Eliminatorias) ---------- */
-const editableA = () => state.ventanaGP === 'abierta';
-const editableB = () => state.ventanaElim === 'abierta';
+function aplicarReglas(r){
+  const set=(id,v)=>{ const e=document.getElementById(id); if(e && v!=null) e.textContent='+'+v; };
+  // Grupos
+  set('lg-rango', r.grupos_rango);  set('lg-puesto', r.grupos_puesto);
+  set('sc-rango', r.grupos_rango);  set('sc-puesto', r.grupos_puesto);
+  // Playoff
+  set('lg-poff', r.playoff_equipo); set('sc-poff', r.playoff_equipo);
+  // Eliminatorias
+  set('sc-gana', r.elim_ganador);   set('sc-emp', r.elim_emparejamiento);  set('sc-exac', r.elim_exacto);
+}
+const editableA = () => state.ventanaGP === 'abierta';const editableB = () => state.ventanaElim === 'abierta';
 function markDirtyA(){ if(!editableA()) return; state.dirtyA = true; updateSaveBar(); }
 function markDirtyB(){ if(!editableB()) return; state.dirtyB = true; updateSaveBar(); }
 
@@ -1076,6 +1085,12 @@ async function boot(){
     const { data } = await sb.from('config_torneo').select('ventana_gp,ventana_elim').eq('id',1).single();
     if(data){ state.ventanaGP = data.ventana_gp; state.ventanaElim = data.ventana_elim; }
   }catch(e){ console.warn('config_torneo no disponible.', e); }
+
+  // Reglas de puntuación (para mostrar los valores reales en las leyendas)
+  try{
+    const { data } = await sb.from('config_reglas').select('*').eq('id',1).single();
+    if(data) aplicarReglas(data);
+  }catch(e){ console.warn('config_reglas no disponible; se dejan los valores por defecto.', e); }
 
   // cuadro real de eliminatorias (octavos con equipos de admin; cuartos+ vacíos)
   try{
